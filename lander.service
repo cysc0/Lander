@@ -1,0 +1,16 @@
+[Unit]
+Description=Lander game
+
+[Service]
+Type=simple
+User=lander
+Group=lander
+Restart=on-failure
+Environment=MIX_ENV=prod "PORT=4797"
+Environment=LANG=en_US.UTF-8
+
+WorkingDirectory=/home/lander/lander
+ExecStart=/bin/bash /home/lander/lander/start.sh
+
+[Install]
+WantedBy=multi-user.target
