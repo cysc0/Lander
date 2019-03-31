@@ -4,7 +4,8 @@ defmodule Lander.Repo.Migrations.CreateUsers do
   def change do
     create table(:users) do
       add :admin, :boolean, default: false, null: false
-      add :email, :string
+      add :password_hash, :string, null: false
+      add :email, :string, null: false
 
       timestamps()
     end

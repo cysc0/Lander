@@ -5,6 +5,8 @@ defmodule Lander.Users.User do
   schema "users" do
     field :admin, :boolean, default: false
     field :email, :string
+    field :password_hash, :string
+    has_many :games, Lander.Games.Game
 
     timestamps()
   end
@@ -12,7 +14,7 @@ defmodule Lander.Users.User do
   @doc false
   def changeset(user, attrs) do
     user
-    |> cast(attrs, [:admin, :email])
-    |> validate_required([:admin, :email])
+    |> cast(attrs, [:admin, :password_hash, :email])
+    |> validate_required([:admin, :password_hash, :email])
   end
 end
