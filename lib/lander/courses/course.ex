@@ -3,6 +3,7 @@ defmodule Lander.Courses.Course do
   import Ecto.Changeset
 
   schema "courses" do
+    field :name, :string
     field :path, {:array, :map}
 
     timestamps()
@@ -11,7 +12,7 @@ defmodule Lander.Courses.Course do
   @doc false
   def changeset(course, attrs) do
     course
-    |> cast(attrs, [:path])
-    |> validate_required([:path])
+    |> cast(attrs, [:name, :path])
+    |> validate_required([:name, :path])
   end
 end

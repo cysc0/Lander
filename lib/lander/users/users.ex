@@ -41,6 +41,11 @@ defmodule Lander.Users do
     Repo.one from u in User,
     where: u.id == ^id
   end
+  
+  def get_user_email(email) do
+    Repo.one from u in User,
+    where: u.email == ^email
+  end
 
   @doc """
   Creates a user.
@@ -58,6 +63,16 @@ defmodule Lander.Users do
     %User{}
     |> User.changeset(attrs)
     |> Repo.insert()
+  end
+
+  @doc """
+  Authenticates a user.
+
+  Returns {:ok, user} on success, or {:error, msg} on failure.
+  """
+  def authenticate_user(email, password) do
+    Repo.get_by(User, email: email)
+    |> Argon2.check_pass(password)
   end
 
   @doc """
