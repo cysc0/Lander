@@ -12,6 +12,8 @@ defmodule LanderWeb.CourseController do
   end
 
   def create(conn, %{"course" => course_params}) do
+    IO.inspect(course_params)
+    # TODO: convert the course lat/longs to a series of elevations
     with {:ok, %Course{} = course} <- Courses.create_course(course_params) do
       conn
       |> put_status(:created)

@@ -1,5 +1,20 @@
 @import "~bootstrap/scss/bootstrap";
 
 #mapContainer {
+    position: relative;
+}
+
+#map {
+    width: 100%;
+    height: 40em;
+    position: absolute;
     vertical-align: middle;
+    margin: auto;
+    z-index: 0;
+    margin-top: 38px;
+}
+
+#mapConfirm {
+    position: relative;
+    margin: auto;
 }

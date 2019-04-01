@@ -28,7 +28,7 @@ defmodule LanderWeb.Router do
       pipe_through :api
 
       resources "/users", UserController, except: [:new, :edit]
-      resources "/courses", CourseController, except: [:new, :edit]
+      resources "/courses", CourseController
       post "/auth", AuthController, :authenticate
     end
   end

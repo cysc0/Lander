@@ -116,18 +116,18 @@ fetchCourses() {
         <div>
           <Header session={this.state.session} root={this} />
           <div className="row">&nbsp;</div>
-          <Route path="/" exact={true} render={() =>
-            <SignupForm session={this.state.session} root={this}/>
-          } />
-          <Route path="/users" exact={true} render={() =>
-            <Users users={this.state.users} root={this}/>
-          } />
-          <Route path="/courses" exact={true} render={() =>
-            <Courses courses={this.state.courses} root={this}/>
-          } />
-          <Route path="/courses/create" exact={true} render={() =>
-            <NewCourse root={this}/>
-          } />
+            <Route path="/" exact={true} render={() =>
+              <SignupForm session={this.state.session} root={this}/>
+            } />
+            <Route path="/users" exact={true} render={() =>
+              <Users users={this.state.users} root={this}/>
+            } />
+            <Route path="/courses" exact={true} render={() =>
+              <Courses courses={this.state.courses} root={this}/>
+            } />
+            <Route path="/courses/create" exact={true} render={() =>
+              <NewCourse root={this}/>
+            } />
         </div>
       </Router>
     </div>;
@@ -264,5 +264,7 @@ function Course(props) {
 }
 
 function NewCourse(props) {
-  return <MapContainer></MapContainer>;
+  return <div>
+    <MapContainer></MapContainer>
+  </div>;
 }
