@@ -1,3 +1,10 @@
 @import "~bootstrap/scss/bootstrap";
 
-body {background-color: black;}
+body {background-color: white;}
+
+
+canvas {
+    border: 5px solid black;
+    padding: 0px;
+    vertical-align: top;
+}

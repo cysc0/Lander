@@ -10,21 +10,18 @@
 //
 import css from "../css/app.scss";
 
-
-import "phoenix_html"
+import "phoenix_html";
 import jQuery from 'jquery';
-window.jQuery = window.$ = jQuery; // Bootstrap requires a global "$" object.
+window.jQuery = window.$ = jQuery;
 import "bootstrap";
 import _ from "lodash";
 
-// Import local files
-//
-// Local files can be imported directly using relative paths, for example:
-// import socket from "./socket"
+import game_init from "./lander";
+import socket from './socket';
 
 
 $(() => {
-//   let node = $('#root')[0];
-//   root_init(node);
-    console.log("ayy");
+    console.log("sdasklf")
+    let node = $('#root')[0];
+    game_init(node, socket);
 });
