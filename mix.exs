@@ -43,7 +43,8 @@ defmodule Lander.MixProject do
       {:plug_cowboy, "~> 1.0"},
       {:comeonin, "~> 5.1.1"},
       {:argon2_elixir, "~> 2.0"},
-      {:distillery, "~> 2.0"}
+      {:distillery, "~> 2.0"},
+      {:httpoison, "~> 1.4"}
     ]
   end
 

@@ -19,7 +19,7 @@ class MapContainer extends React.Component {
 
   onMarkerClick (props, marker, e) {
     let root = props.root;
-    root.state.path.push({lat: e.latLng.lat(), lng: e.latLng.lng()});
+    root.state.path.push([e.latLng.lat(), e.latLng.lng()]);
     if (root.state.path.length >= 2) {
       root.state.validPath = true;
     }
