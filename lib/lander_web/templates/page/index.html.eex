@@ -3,5 +3,8 @@
     <div class="col-12">
       <p>React component loading...</p>
     </div>
+    <script>
+      window.secret_api_maps = <%= raw Jason.encode!(Application.get_env(:lander, :secret_api_maps)) %>;
+    </script>
   </div>
 </div>

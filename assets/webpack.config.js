@@ -27,7 +27,9 @@ module.exports = (env, options) => ({
         use: {
           loader: 'babel-loader',
           options: {
-            presets: ['@babel/preset-env', '@babel/preset-react']
+            presets: ['@babel/preset-env',
+                      '@babel/preset-react', {
+                      'plugins': ['@babel/plugin-proposal-class-properties']}],
           },
         }
       },
@@ -43,9 +45,10 @@ module.exports = (env, options) => ({
   },
   resolve: {
     extensions: ['.js', '.jsx', '.css', 'scss'],
+    extensions: ['.js', '.jsx', '.css', '.scss'],
   },
   plugins: [
     new MiniCssExtractPlugin({ filename: '../css/app.css' }),
-    new CopyWebpackPlugin([{ from: 'static/', to: '../' }])
+    new CopyWebpackPlugin([{ from: 'static/', to: '../' }]),
   ]
 });

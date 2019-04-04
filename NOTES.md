@@ -40,3 +40,7 @@ Otherwise we offer view(s) containing:
   the window to push game-state updates down the channel to disrupt the player.
 * Spectator actions: swap A/D keys, apply momentary throttle, cut throttle for ~5 secs...
   We might end up needing a timer so that spectators can't annoy the player too much
+## Misc
+* Remove or implement require_auth.ex
+* Make signpu actually diff than login
+* Session cookie for page refresh

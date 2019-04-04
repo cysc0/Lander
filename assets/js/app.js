@@ -19,9 +19,10 @@ import _ from "lodash";
 import game_init from "./lander";
 import socket from './socket';
 
+import root_init from "./root"
 
 $(() => {
-    console.log("sdasklf")
     let node = $('#root')[0];
-    game_init(node, socket);
+    //game_init(node, socket);
+    root_init(node);
 });

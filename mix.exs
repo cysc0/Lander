@@ -18,7 +18,9 @@ defmodule Lander.MixProject do
   def application do
     [
       mod: {Lander.Application, []},
-      extra_applications: [:logger]
+      extra_applications: [:logger],
+      env: [secret_api_elevation: String.trim(File.read!(Path.join(Path.join(Path.expand(File.cwd!), "/config"), "elevation.secret.exs"))),
+            secret_api_maps: String.trim(File.read!(Path.join(Path.join(Path.expand(File.cwd!), "/config"), "maps.secret.exs")))]
     ]
   end
 
@@ -43,7 +45,8 @@ defmodule Lander.MixProject do
       {:plug_cowboy, "~> 1.0"},
       {:comeonin, "~> 5.1.1"},
       {:argon2_elixir, "~> 2.0"},
-      {:distillery, "~> 2.0"}
+      {:distillery, "~> 2.0"},
+      {:httpoison, "~> 1.4"}
     ]
   end
 
