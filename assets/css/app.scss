@@ -4,6 +4,13 @@
     position: relative;
 }
 
+#courseTitle {
+    width: 100%;
+    position: relative;
+    margin: 0;
+    padding: 0;
+}
+
 #map {
     width: 100%;
     height: 40em;
@@ -16,5 +23,48 @@
 
 #mapConfirm {
     position: relative;
+    margin: auto;
+}
+
+#navLinks {
+    text-align: center;
+    margin: auto;
+}
+
+.sessionInfo {
+    margin: auto;
+    margin-right:0;
+}
+
+.sessionText {
+    width: 100%;
+}
+
+.sessionGreeting {
+    text-align: right;
+    padding-right: 5%;
+}
+
+.sessionGo {
+    height: 100%;
+    width: 100%;
+}
+
+#sessionGoContainer {
+    padding: 0;
+}
+
+#sessionTable {
+    width: 100%;
+    margin: auto;
+}
+
+#sessionLogOut {
+    width: 20%;
+    margin: auto;
+    height: 100%
+}
+
+#pageTitle {
     margin: auto;
 }

@@ -12,7 +12,7 @@ defmodule LanderWeb.CourseView do
 
   def render("course.json", %{course: course}) do
     %{id: course.id,
-      path: course.path,
-      name: course.name}
+      name: course.name,
+      path: course.path}
   end
 end

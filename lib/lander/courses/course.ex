@@ -4,7 +4,7 @@ defmodule Lander.Courses.Course do
 
   schema "courses" do
     field :name, :string
-    field :path, {:array, :map}
+    field :path, {:array, :float}
 
     timestamps()
   end

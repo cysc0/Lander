@@ -5,12 +5,14 @@ defmodule LanderWeb.CourseControllerTest do
   alias Lander.Courses.Course
 
   @create_attrs %{
+    name: "some name",
     path: []
   }
   @update_attrs %{
+    name: "some updated name",
     path: []
   }
-  @invalid_attrs %{path: nil}
+  @invalid_attrs %{name: nil, path: nil}
 
   def fixture(:course) do
     {:ok, course} = Courses.create_course(@create_attrs)
@@ -37,6 +39,7 @@ defmodule LanderWeb.CourseControllerTest do
 
       assert %{
                "id" => id,
+               "name" => "some name",
                "path" => []
              } = json_response(conn, 200)["data"]
     end
@@ -58,6 +61,7 @@ defmodule LanderWeb.CourseControllerTest do
 
       assert %{
                "id" => id,
+               "name" => "some updated name",
                "path" => []
              } = json_response(conn, 200)["data"]
     end

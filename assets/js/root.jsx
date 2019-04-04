@@ -8,7 +8,8 @@ import { Provider } from 'react-redux';
 import MapContainer from './map';
 
 export default function root_init(node) {
-  ReactDOM.render(<Root/>, node);
+  let secret_api_maps = window.secret_api_maps;
+  ReactDOM.render(<Root maps_api={secret_api_maps}/>, node);
 }
 
 class Root extends React.Component {
@@ -19,7 +20,8 @@ class Root extends React.Component {
       signup_form: {email: "", password: "", newUser: true},
       session: null,
       users: this.fetchUsers(),
-      courses: this.fetchCourses()
+      courses: this.fetchCourses(),
+      maps_api_key: props.maps_api
     };
   };
 
@@ -65,6 +67,7 @@ fetchCourses() {
       success: (resp) => {
         let state1 = _.assign({}, this.state, { session: resp.data });
         this.setState(state1);
+        // window.location.href = "courses"
       }
     });
   };
@@ -126,7 +129,7 @@ fetchCourses() {
               <Courses courses={this.state.courses} root={this}/>
             } />
             <Route path="/courses/create" exact={true} render={() =>
-              <NewCourse root={this}/>
+              <NewCourse root={this} secret_api_maps={this.state.maps_api_key}/>
             } />
         </div>
       </Router>
@@ -143,53 +146,72 @@ function Header(props) {
   let nav_bar;
   if (session == null) {
     session_info = <div className="form-inline">
-      <input type="email" placeholder="email" onKeyDown={(ev) => root.enter_login(ev)}
-             onChange={(ev) => root.update_login_form({email: ev.target.value})} />
-      <input type="password" placeholder="password" onKeyDown={(ev) => root.enter_login(ev)}
-             onChange={(ev) => root.update_login_form({password: ev.target.value})} />
-      <button className="btn btn-sm btn-secondary" onClick={() => root.login()}>Login</button>
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <input type="email" placeholder="email" onKeyDown={(ev) => root.enter_login(ev)}
+                    className="sessionInfo sessionText" onChange={(ev) => root.update_login_form({email: ev.target.value})} />
+              <input type="password" placeholder="password" onKeyDown={(ev) => root.enter_login(ev)}
+                    className="sessionInfo sessionText" onChange={(ev) => root.update_login_form({password: ev.target.value})} />
+            </td>
+            <td>
+              <button className="btn btn-sm btn-secondary btn-block sessionInfo sessionGo" onClick={() => root.login()}>Login</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>;
-    nav_bar = <div className="col-4">
-    <p>
-      <Link to={"/users"} onClick={(ev) => root.fetchUsers()}>Users</Link>&nbsp;|&nbsp;
-      <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>
-    </p>
-  </div>;
+    nav_bar = <div className="col-4" id="navLinks">
+      <p>
+        <Link to={"/users"} onClick={(ev) => root.fetchUsers()}>Users</Link>&nbsp;|&nbsp;
+        <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>
+      </p>
+    </div>;
   }
   else {
     session_info = <div>
-      <p>Hello, {session.user_email}</p>
-      <Link to="/" className="btn btn-sm btn-secondary" onClick={() => root.logout()}>Logout</Link>
+      <table>
+        <tbody>
+          <tr>
+            <td>
+              <p className="sessionInfo sessionGreeting sessionText">Hello, {session.user_id}</p>
+            </td>
+            <td id="sessionLogOut">
+              <Link to="/" className="btn btn-sm btn-secondary btn-block sessionInfo" onClick={() => root.logout()}>Logout</Link>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
-    nav_bar = <div className="col-4">
-    <p>
-      <Link to={"/users"} onClick={(ev) => root.fetchUsers()}>Users</Link>
-    </p>
-  </div>;
+    nav_bar = <div className="col-4" id="navLinks">
+      <p>
+        <Link to={"/users"} onClick={(ev) => root.fetchUsers()}>Users</Link>&nbsp;|&nbsp;
+        <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>
+      </p>
+    </div>;
   }
 
   if (session == null) {
   return <div className="row">
-    <div className="col-4">
-      <Link to={"/"}><h1 id="pagetitle">Lander</h1></Link>
+    <div className="col-4" id="pageTitle">
+      <Link to={"/"}><h1>Lander</h1></Link>
     </div>
       {nav_bar}
-    <div className="col-4">
+    <div className="col-4" id="sessionTable">
       {session_info}
     </div>
   </div>;
   } else {
     return <div>
       <div className="row">
-        <div className="col-4">
-          <Link to={"/"}><h1 id="pagetitle">Lander</h1></Link>
+        <div className="col-4" id="pageTitle">
+          <Link to={"/"}><h1>Lander</h1></Link>
         </div>
         {nav_bar}
-        <div className="col-4">
+        <div className="col-4" id="sessionTable">
           {session_info}
         </div>
-      </div>
-      <div className="row">
       </div>
     </div>;
   }
@@ -218,31 +240,26 @@ function SignupForm(props) {
 ///////////////////////////////////// USERS //////////////////////////////////////
 
 function Users(props) {
-  let rows = _.map(props.users, (user) => <User key={user.id} user={user} />);
-  return <div className="row">
-    <div className="col-12">
-      <table className="table table-striped table-bordered">
-        <thead className="thead thead-dark">
-          <tr>
-            <th>Email</th>
-            <th>Administrator</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows}
-        </tbody>
-      </table>
-    </div>
-  </div>;
+  let users = _.map(props.users, (user) => <User key={user.id} user={user} />);
+  return <div>
+          <div className="card-columns">
+            {users}
+          </div>
+        </div>;
 }
 
 function User(props) {
   let {user} = props;
   let targetUrl = window.location.href + "/" + user.email;
-  return <tr>
-    <td><a href={targetUrl}>{user.email}</a></td>
-    <td>{user.admin ? "👍" : "👎"}</td>
-  </tr>;
+  return <div className="card user-card">
+          <div className="card-body">
+            <h5 className="card-title">{user.email}</h5>
+            <p className="card-text">TODO: some text here? Maybe hi scores?</p>
+          </div>
+          <div className="card-footer">
+            <a href={targetUrl} className="btn btn-success btn-block btn-sm">TODO: spectate link</a>
+          </div>
+        </div>;
 }
 
 //////////////////////////////////// COURSES /////////////////////////////////////
@@ -250,21 +267,29 @@ function User(props) {
 function Courses(props) {
   let courses = _.map(props.courses, (c) => <Course key={c.id} course={c} root={props.root}/>);
   return <div>
-    <div className="row">
+    <div className="card-columns">
       {courses}
     </div>
     <div className="row">
-      <Link to={"/courses/create"} id="newcourse" className="btn btn-primary btn-block">New Course</Link>
+      <Link to={"/courses/create"} id="newcourse" className="btn btn-info btn-block">New Course</Link>
     </div>
-  </div>
+  </div>;
 }
 
 function Course(props) {
-  return props.course.name;
+  return <div className="card course-card">
+          <div className="card-body">
+            <h5 className="card-title">{props.course.name}</h5>
+            <p className="card-text">TODO: some text here? Maybe hi scores?</p>
+          </div>
+          <div className="card-footer">
+            <button className="btn btn-success btn-block btn-sm">TODO: play link</button>
+          </div>
+        </div>;
 }
 
 function NewCourse(props) {
   return <div>
-    <MapContainer></MapContainer>
+    <MapContainer secret_api_maps={props.secret_api_maps}></MapContainer>
   </div>;
 }

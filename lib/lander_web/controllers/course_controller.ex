@@ -12,18 +12,22 @@ defmodule LanderWeb.CourseController do
   end
 
   def create(conn, %{"course" => course_params}) do
-    case elevation_request(conn, course_params) do
+    case elevation_request(conn, Map.get(course_params, "path")) do
       {:ok, %HTTPoison.Response{status_code: 200, body: body}} ->
-        with {:ok, %Course{} = course} <- Courses.create_course(course_params) do
+        {_, response} = Jason.decode(body)
+        elevation_maplist = Map.get(response, "results")
+        elevation_list = List.foldr(elevation_maplist, [], fn map_elem, acc -> [Map.get(map_elem, "elevation")] ++ acc end)
+        course = %{path: elevation_list, name: Map.get(course_params, "name")}
+        with {:ok, %Course{} = course} <- Courses.create_course(course) do
           conn
           |> put_status(:created)
           |> put_resp_header("location", Routes.course_path(conn, :show, course))
           |> render("show.json", course: course)
         end
-      {:ok, %HTTPoison.Response{status_code: 404}}
-        IO.puts("404 error on elevation request")
-      {:error, %HTTPoison.Error{reason: reason}}
-        IO.puts("Unknown error on elevation request")
+      # {:ok, %HTTPoison.Response{status_code: 404}}
+      #   IO.puts("404 error on elevation request")
+      # {:error, %HTTPoison.Error{reason: "unknown_err"}}
+      #   IO.puts("Unknown error on elevation request")
     end
     # TODO: convert the course lat/longs to a series of elevations
   end
@@ -50,7 +54,6 @@ defmodule LanderWeb.CourseController do
   end
 
   def elevation_request(conn, course_params) do
-    # TODO: interpolate requests w/ data points to create ~10 length path, do it w/ function that takes length as param 
     # https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034&key=YOUR_API_KEY
     step_count = 20
     lat_start = List.first(List.first(course_params))
@@ -60,10 +63,10 @@ defmodule LanderWeb.CourseController do
     interpolated_list = interpolate_coords(lat_start, lon_start, lat_end, lon_end, step_count)
     stringified = List.foldr(interpolated_list, "", fn [lat, lng],
                               acc -> Float.to_string(lat) <> "," <> Float.to_string(lng) <> "|" <> acc end)
-                              api_key = "&key=" <> ""
-                              request_path = "https://maps.googleapis.com/maps/api/elevation/json?locations="
-                              <> String.slice(stringified, 0..(String.length(stringified) - 2))
-                              <> api_key
+    api_key = "&key=" <> Application.get_env(:lander, :secret_api_elevation)
+    request_path = "https://maps.googleapis.com/maps/api/elevation/json?locations="
+      <> String.slice(stringified, 0..(String.length(stringified) - 2))
+      <> api_key
     HTTPoison.start()
     HTTPoison.get(request_path)
   end

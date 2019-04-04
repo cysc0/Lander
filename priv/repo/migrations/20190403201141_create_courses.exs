@@ -4,7 +4,7 @@ defmodule Lander.Repo.Migrations.CreateCourses do
   def change do
     create table(:courses) do
       add :name, :string
-      add :path, {:array, :map}
+      add :path, {:array, :float}
 
       timestamps()
     end

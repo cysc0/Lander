@@ -9,12 +9,16 @@ import _ from 'lodash';
 // Some of this setup is a little weird, mainly because the contexts from the
 // API wrapper and our components were intererfing. TODO: cleanup if time permits
 class MapContainer extends React.Component {
+  constructor(props) {
+    super(props);
+  }
   state = {
     showingInfoWindow: false,
     activeMarker: {},
     selectedPlace: {},
     path: [],
-    validPath: false
+    validPath: false,
+    course_name: ""
   };
 
   onMarkerClick (props, marker, e) {
@@ -30,7 +34,10 @@ class MapContainer extends React.Component {
     $.ajax("/api/v1/courses", {
       method: "post",
       contentType: "application/json; charset=UTF-8",
-      data: JSON.stringify({course: path}),
+      data: JSON.stringify({course: 
+                            {path: path,
+                             name: "TODO: add a name field"}
+                            }),
       success: (resp) => {
         // TODO: redirect to users play page for this course
       }
@@ -39,9 +46,23 @@ class MapContainer extends React.Component {
 
   getButton (root) {
     if (root.state.validPath) {
-      return <button className="btn btn-primary btn-block" onClick={() => root.postCourse(root.state.path)}>Go!</button>
+      return <div className="row" id="mapConfirm">
+              <div className="col-8">
+                <input type="text" id="courseTitle" placeholder="Enter a course title"></input>
+              </div>
+              <div className="col-4">
+                <button className="btn btn-primary btn-sm btn-block" onClick={() => root.postCourse(root.state.path)}>Go!</button>
+              </div>
+            </div>
     } else {
-      return <button className="btn btn-primary disabled btn-block">Go!</button>
+      return <div className="row" id="mapConfirm">
+              <div className="col-8">
+                <input type="text" id="courseTitle" placeholder="Enter a course title"></input>
+              </div>
+              <div className="col-4">
+                <button className="btn btn-primary btn-sm disabled btn-block">Go!</button>
+              </div>
+            </div>
     }
   }
 
@@ -61,14 +82,12 @@ class MapContainer extends React.Component {
           }}
           />
         </div>
-        <div className="row" id="mapConfirm">
           {button}
-        </div>
       </div>
       );
     }
   }
   
   export default GoogleApiWrapper({
-    apiKey: ''
+    apiKey: secret_api_maps
   })(MapContainer);
