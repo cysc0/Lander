@@ -5,11 +5,6 @@ import { Stage, Layer, Rect, Text } from 'react-konva';
 import Konva from 'konva';
 import $ from 'jquery';
 
-
-export default function game_init(root, socket) {
-    ReactDOM.render(<Lander socket={socket} />, root);
-}
-
 const levelLength = 1000;
 const blockWidth = 1;
 const H = 500;
@@ -21,8 +16,9 @@ const gameName = "mike";
 
 class Lander extends React.Component {
     constructor(props) {
+        console.log(props.match.params.id)
         super(props)
-        let { socket } = props;
+        let socket = props.socket;
         this.channel = socket.channel("user:" + gameName, {});
         this.keyMap = {
             w: false,
@@ -146,3 +142,5 @@ class Lander extends React.Component {
         </Stage>);
     }
 }
+
+export default Lander;
