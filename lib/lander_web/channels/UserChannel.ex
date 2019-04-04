@@ -34,14 +34,18 @@ defmodule LanderWeb.UserChannel do
     "d", bool
   }
   """
-  def handle_in("tick", %{"ship" => ship, "keymap" => keymap}, socket) do
-    newShip =
-      ship
-      |> Game.handle_vertical(keymap)
-      |> Game.handle_horizontal(keymap)
-      |> Game.move()
+  def handle_in("tick", %{"ship" => ship, "keymap" => keymap, "level" => level}, socket) do
+    if Game.did_collide(ship, level) do
+      {:reply, {:ok, %{:ship => ship}}, socket}
+    else
+      newShip =
+        ship
+        |> Game.handle_vertical(keymap)
+        |> Game.handle_horizontal(keymap)
+        |> Game.move(level)
 
-    {:reply, {:ok, %{:ship => newShip}}, socket}
+      {:reply, {:ok, %{:ship => newShip}}, socket}
+    end
   end
 
   # Add authorization logic here as required.

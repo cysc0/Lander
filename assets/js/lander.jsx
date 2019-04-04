@@ -10,12 +10,12 @@ export default function game_init(root, socket) {
     ReactDOM.render(<Lander socket={socket} />, root);
 }
 
-const levelLength = 50;
-const blockWidth = 20;
+const levelLength = 1000;
+const blockWidth = 1;
 const H = 500;
 const W = levelLength * blockWidth;
-const shipWidth = 15;
-const shipHeight = 15;
+const shipWidth = 16;
+const shipHeight = shipWidth;
 const tickRate = (1 / 30) * 1000;
 const gameName = "mike";
 
@@ -36,7 +36,8 @@ class Lander extends React.Component {
                 x: 250,
                 y: 250,
                 dx: 0,
-                dy: 0
+                dy: 0,
+                angle: 90
             }
         }
         this.channel
@@ -52,24 +53,27 @@ class Lander extends React.Component {
 
     randomLevel() {
         let level = []
+        let lastBlock = 100;
         for (let i = 0; i < levelLength; i++) {
-            level.push(Math.floor(Math.random() * 8));
+            level.push(lastBlock)
+            let newBlock = lastBlock + Math.floor((Math.random() * 11) - 5)
+            lastBlock = newBlock;
         }
         return level;
     }
 
     keyEvent = (isKeyDown, keyCode) => {
         switch (keyCode) {
-            case 87:
+            case 87: // 87 = W
                 this.keyMap.w = isKeyDown;
                 break;
-            case 65:
+            case 65: // 65 = A
                 this.keyMap.a = isKeyDown;
                 break;
-            case 83:
+            case 83: // 83 = S
                 this.keyMap.s = isKeyDown;
                 break;
-            case 68:
+            case 68: // 68 = D
                 this.keyMap.d = isKeyDown;
                 break;
             default:
@@ -89,7 +93,8 @@ class Lander extends React.Component {
         this.channel
             .push("tick", {
                 ship: this.state.ship,
-                keymap: this.keyMap
+                keymap: this.keyMap,
+                level: this.state.level
             })
             .receive("ok", (view) => {
                 this.setState({ ship: view.ship })
@@ -126,8 +131,11 @@ class Lander extends React.Component {
             </Layer>
             <Layer >
                 <Rect
+                    rotation={-1 * this.state.ship.angle}
                     x={this.state.ship.x}
-                    y={this.state.ship.y}
+                    y={H - this.state.ship.y}
+                    offsetX={shipWidth / 2}
+                    offsetY={shipWidth / 2}
                     width={shipWidth}
                     height={shipHeight}
                     fill={'blue'}
