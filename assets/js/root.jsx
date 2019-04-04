@@ -6,6 +6,7 @@ import $ from 'jquery';
 import { Provider } from 'react-redux';
 
 import MapContainer from './map';
+import socket from './socket';
 
 export default function root_init(node) {
   let secret_api_maps = window.secret_api_maps;
