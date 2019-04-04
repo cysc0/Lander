@@ -55,7 +55,7 @@ defmodule LanderWeb.CourseController do
 
   def elevation_request(conn, course_params) do
     # https://maps.googleapis.com/maps/api/elevation/json?locations=39.7391536,-104.9847034&key=YOUR_API_KEY
-    step_count = 20
+    step_count = 200
     lat_start = List.first(List.first(course_params))
     lon_start = List.last(List.first(course_params))
     lat_end = List.first(List.last(course_params))
