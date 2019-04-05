@@ -20,9 +20,9 @@ defmodule LanderWeb.UserController do
     end
   end
 
-  def show(conn, %{"id" => id}) do
-    user = Users.get_user!(id)
-    render(conn, "show.json", user: user)
+  def show(conn, %{"user" => user_email}) do
+    user = Users.get_user_email(List.first(user_email))
+    render(conn, "show.html", user: user)
   end
 
   def update(conn, %{"id" => id, "user" => user_params}) do
