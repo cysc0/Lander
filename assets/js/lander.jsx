@@ -39,11 +39,11 @@ class Lander extends React.Component {
         this.channel
             .join()
             .receive("ok", (view) => {
-                console.log(view);
-                console.log("did mount")
+                // console.log(view);
+                // console.log("did mount")
             })
             .receive("error", (reason) => {
-                console.log(reason)
+                // console.log(reason)
             })
     }
 

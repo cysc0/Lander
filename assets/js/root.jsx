@@ -23,6 +23,7 @@ class Root extends React.Component {
       session: null,
       users: this.fetchUsers(),
       courses: this.fetchCourses(),
+      scores: [],
       maps_api_key: props.maps_api
     };
   };
@@ -48,6 +49,19 @@ class Root extends React.Component {
       contentType: "application/json; charset=UTF-8",
       success: (resp) => {
         let state1 = _.assign({}, this.state, { courses: resp.data });
+        this.setState(state1);
+      }
+    });
+  };
+
+  fetchMyScores() {
+    $.ajax("/api/v1/games", {
+      method: "get",
+      contentType: "application/json; charset=UTF-8",
+      // data: JSON.stringify(this.state.session.user_id),
+      data: ({id: 1}),
+      success: (resp) => {
+        let state1 = _.assign({}, this.state, { scores: resp.data });
         this.setState(state1);
       }
     });
@@ -134,8 +148,11 @@ class Root extends React.Component {
             <NewCourse root={this} secret_api_maps={this.state.maps_api_key} />
           } />
           <Route path="/play/:id" exact={true} render={(props) =>
-            <Lander {...props} socket={socket} />}
-          />
+            <Lander {...props} socket={socket} />
+          } />
+          <Route path="/myscores" exact={true} render={(props) =>
+            <Scores session={this.state.session} root={this} />
+          } />
         </div>
       </Router>
     </div>;
@@ -170,7 +187,8 @@ function Header(props) {
     nav_bar = <div className="col-4" id="navLinks">
       <p>
         <Link to={"/users"} onClick={(ev) => root.fetchUsers()}>Users</Link>&nbsp;|&nbsp;
-        <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>
+        <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>&nbsp;|&nbsp;
+        <Link to={"/myscores"} onClick={(ev) => root.fetchMyScores()}>My Scores</Link>
       </p>
     </div>;
   }
@@ -192,7 +210,8 @@ function Header(props) {
     nav_bar = <div className="col-4" id="navLinks">
       <p>
         <Link to={"/users"} onClick={(ev) => root.fetchUsers()}>Users</Link>&nbsp;|&nbsp;
-        <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>
+        <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>&nbsp;|&nbsp;
+        <Link to={"/myscores"} onClick={(ev) => root.fetchCourses()}>My Scores</Link>
       </p>
     </div>;
   }
@@ -259,10 +278,10 @@ function User(props) {
   return <div className="card user-card">
     <div className="card-body">
       <h5 className="card-title">{user.email}</h5>
-      <p className="card-text">TODO: some text here? Maybe hi scores?</p>
+      {/* <p className="card-text">TODO: some text here? Maybe hi scores?</p> */}
     </div>
     <div className="card-footer">
-      <a href={targetUrl} className="btn btn-success btn-block btn-sm">TODO: spectate link</a>
+      {/* <a href={targetUrl} className="btn btn-success btn-block btn-sm">TODO: spectate link</a> */}
     </div>
   </div>;
 }
@@ -285,7 +304,7 @@ function Course(props) {
   return <div className="card course-card">
     <div className="card-body">
       <h5 className="card-title">{props.course.name}</h5>
-      <p className="card-text">TODO: some text here? Maybe hi scores?</p>
+      {/* <p className="card-text">TODO: some text here? Maybe hi scores?</p> */}
     </div>
     <div className="card-footer">
       <Link to={`/play/${props.course.id}`} id="playcourse" className="btn btn-success btn-block btn-sm">Play</Link>
@@ -296,5 +315,30 @@ function Course(props) {
 function NewCourse(props) {
   return <div>
     <MapContainer secret_api_maps={props.secret_api_maps}></MapContainer>
+  </div>;
+}
+
+///////////////////////////////////// SCORES /////////////////////////////////////
+
+function Scores(props) {
+  let {root, session} = props;
+  let scores_values = root.state.scores;
+  let scores = _.map(scores_values, (s) => <Score key={s.id} score={s.score} course={s.course_id} coursename={s.course_name} user={s.user_id} root={root} />)
+  return <div>
+    <div className="card-columns">
+      {scores}
+    </div>
+  </div>;
+}
+
+function Score(props) {
+  return <div className="card">
+    <div className="card-body">
+      <h5 className="card-title">{props.coursename}</h5>
+      <p className="card-text">Score: {props.score}</p>
+    </div>
+    <div className="card-footer">
+      <Link to={`/play/${props.course}`} id="playcourse" className="btn btn-success btn-block btn-sm">Play</Link>
+    </div>
   </div>;
 }

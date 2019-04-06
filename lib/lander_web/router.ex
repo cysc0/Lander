@@ -19,6 +19,7 @@ defmodule LanderWeb.Router do
       get "/", PageController, :index
       get "/users", PageController, :index
       get "/users/*user", UserController, :show
+      get "/myscores", PageController, :index
       get "/courses", PageController, :index
       get "/courses/create", PageController, :index
       get "/play/*id", PageController, :index
@@ -29,6 +30,7 @@ defmodule LanderWeb.Router do
       pipe_through :api
 
       resources "/users", UserController, except: [:new, :edit]
+      resources "/games", GameController, except: [:new, :edit]
       resources "/courses", CourseController
       post "/auth", AuthController, :authenticate
     end

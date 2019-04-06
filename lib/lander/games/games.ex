@@ -21,6 +21,14 @@ defmodule Lander.Games.Games do
     Repo.all(Game)
   end
 
+  def games_by_user(id) do
+    query = from g in Game,
+            where: g.user_id == ^id
+    Repo.all(query)
+    |> Repo.preload(:course)
+    |> Repo.preload(:user)
+  end
+
   @doc """
   Gets a single game.
 

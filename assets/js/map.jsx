@@ -31,17 +31,22 @@ class MapContainer extends React.Component {
   }
 
   postCourse(path) {
-    $.ajax("/api/v1/courses", {
-      method: "post",
-      contentType: "application/json; charset=UTF-8",
-      data: JSON.stringify({course: 
-                            {path: path,
-                             name: "TODO: add a name field"}
-                            }),
-      success: (resp) => {
-        // TODO: redirect to users play page for this course
-      }
-    });
+    let courseTitle = $("#courseTitle")[0].value;
+    if (courseTitle == "" ) {
+      alert("Enter a course title")
+    } else {
+      $.ajax("/api/v1/courses", {
+        method: "post",
+        contentType: "application/json; charset=UTF-8",
+        data: JSON.stringify({course: 
+                              {path: path,
+                              name: courseTitle}
+                              }),
+        success: (resp) => {
+          window.location.pathname = "/courses"
+        }
+      });
+    }
   }
 
   getButton (root) {

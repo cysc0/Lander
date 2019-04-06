@@ -3,11 +3,13 @@ defmodule LanderWeb.GameController do
 
   alias Lander.Games
   alias Lander.Games.Game
+  alias Lander.Games.Games
 
   action_fallback LanderWeb.FallbackController
 
-  def index(conn, _params) do
-    games = Games.list_games()
+  def index(conn, %{"id" => user_id}) do
+    games = Games.games_by_user(user_id)
+    # IO.inspect(games)
     render(conn, "index.json", games: games)
   end
 

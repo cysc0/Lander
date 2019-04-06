@@ -12,6 +12,10 @@ defmodule LanderWeb.GameView do
 
   def render("game.json", %{game: game}) do
     %{id: game.id,
-      score: game.score}
+      score: game.score,
+      course_id: game.course_id,
+      course_name: game.course.name,
+      user_id: game.user_id,
+      user_email: game.user.email}
   end
 end

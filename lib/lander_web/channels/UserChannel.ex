@@ -6,7 +6,7 @@ defmodule LanderWeb.UserChannel do
   alias Lander.Courses.Courses
 
   def join("user:" <> name, payload, socket) do
-    IO.inspect(payload)
+    # IO.inspect(payload)
 
     if authorized?(payload) do
       socket =

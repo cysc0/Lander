@@ -75,8 +75,8 @@ defmodule Lander.Games.Game do
 
   def extend_over(level, new_len) do
     old_len = Enum.count(level)
-    IO.puts("Here!!!")
-    IO.inspect(level)
+    # IO.puts("Here!!!")
+    # IO.inspect(level)
 
     Enum.map(0..(new_len - 1), fn i ->
       index_in_old = i / (new_len - 1) * (old_len - 1)
@@ -209,16 +209,16 @@ defmodule Lander.Games.Game do
 
     cond do
       line3_collide ->
-        IO.puts("line 3 collide")
+        # IO.puts("line 3 collide")
 
       line2_collide ->
-        IO.puts("line 2 collide")
+        # IO.puts("line 2 collide")
 
       line1_collide ->
-        IO.puts("line 1 collide")
+        # IO.puts("line 1 collide")
 
       true ->
-        IO.puts("no collide")
+        # IO.puts("no collide")
     end
 
     line1_collide || line2_collide || line3_collide
