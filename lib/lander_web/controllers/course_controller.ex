@@ -1,7 +1,7 @@
 defmodule LanderWeb.CourseController do
   use LanderWeb, :controller
 
-  alias Lander.Courses
+  alias Lander.Courses.Courses
   alias Lander.Courses.Course
 
   action_fallback LanderWeb.FallbackController

@@ -1,4 +1,4 @@
-defmodule Lander.Games do
+defmodule Lander.Games.Games do
   @moduledoc """
   The Games context.
   """
