@@ -1,4 +1,4 @@
-defmodule Lander.Courses do
+defmodule Lander.Courses.Courses do
   @moduledoc """
   The Courses context.
   """
@@ -19,6 +19,11 @@ defmodule Lander.Courses do
   """
   def list_courses do
     Repo.all(Course)
+  end
+
+  def get_path_from_id(id) do
+    course = Repo.get!(Course, id)
+    course.path
   end
 
   @doc """

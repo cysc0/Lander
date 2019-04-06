@@ -16,8 +16,8 @@ const gameName = "mike";
 
 class Lander extends React.Component {
     constructor(props) {
-        console.log(props.match.params.id)
         super(props)
+        this.courseID = props.match.params.id
         let socket = props.socket;
         this.channel = socket.channel("user:" + gameName, {});
         this.keyMap = {
@@ -78,10 +78,14 @@ class Lander extends React.Component {
     }
 
     componentDidMount() {
-        this.setState({ level: this.randomLevel() })
+        this.channel.push("get_course", {
+            id: this.courseID
+        })
+            .receive("ok", (view) =>
+                this.setState({ level: view.level }))
         document.addEventListener("keydown", (keyEvent) => this.keyEvent(true, keyEvent.keyCode))
         document.addEventListener("keyup", (keyEvent) => this.keyEvent(false, keyEvent.keyCode))
-        setInterval(this.tick, tickRate)
+        //setInterval(this.tick, tickRate)
     }
 
     tick = () => {

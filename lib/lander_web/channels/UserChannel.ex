@@ -2,6 +2,8 @@ defmodule LanderWeb.UserChannel do
   use LanderWeb, :channel
 
   alias Lander.Games.Game
+  alias Lander.Games.Games
+  alias Lander.Courses.Courses
 
   def join("user:" <> name, payload, socket) do
     IO.inspect(payload)
@@ -46,6 +48,16 @@ defmodule LanderWeb.UserChannel do
 
       {:reply, {:ok, %{:ship => newShip}}, socket}
     end
+  end
+
+  def handle_in("get_course", %{"id" => course_id}, socket) do
+    course =
+      Courses.get_path_from_id(course_id)
+      |> Game.extend_over(1000)
+      |> Game.normalize_between(25, 200)
+
+
+    {:reply, {:ok, %{:level => course}}, socket}
   end
 
   # Add authorization logic here as required.

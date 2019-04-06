@@ -73,6 +73,38 @@ defmodule Lander.Games.Game do
     |> Map.put("dy", ship["dy"] + gravity)
   end
 
+  def extend_over(level, new_len) do
+    old_len = Enum.count(level)
+    IO.puts("Here!!!")
+    IO.inspect(level)
+
+    Enum.map(0..(new_len - 1), fn i ->
+      index_in_old = i / (new_len - 1) * (old_len - 1)
+      pct_of_fl = :math.ceil(index_in_old) - index_in_old
+      pct_of_cl = 1 - pct_of_fl
+      floor_avg = Enum.at(level, trunc(:math.floor(index_in_old))) * pct_of_fl
+      ceil_avg = Enum.at(level, trunc(:math.ceil(index_in_old))) * pct_of_cl
+      floor_avg + ceil_avg
+    end)
+  end
+
+  def normalize_between(level, min, max) do
+    width = max - min
+    max_height = Enum.max(level)
+    min_height = Enum.min(level)
+    cond do
+      max_height < max && min_height > min ->
+        level
+      max_height + min_height < max ->
+        level
+        |> Enum.map(fn x -> x + min end)
+      true ->
+        Enum.map(level, fn x ->
+          (x - min_height) / (max_height - min_height) * width + min
+        end)
+    end
+  end
+
   def tr(adjusted) do
     degrees = 45 - (90 - adjusted)
     degrees * :math.pi() / 180
