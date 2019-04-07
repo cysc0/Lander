@@ -7,9 +7,6 @@ defmodule LanderWeb.AuthController do
   action_fallback LanderWeb.FallbackController
 
   def authenticate(conn, %{"email" => email, "password" => password, "newUser" => newUser}) when newUser == false do
-    IO.inspect(email)
-    IO.inspect(password)
-    IO.inspect(newUser)
     with {:ok, %User{} = user} <- Users.authenticate_user(email, password) do
       resp = %{
         data: %{
@@ -26,14 +23,9 @@ defmodule LanderWeb.AuthController do
   end
 
   def authenticate(conn, %{"email" => email, "password" => password, "newUser" => newUser}) when newUser == true do
-    IO.inspect(email)
-    IO.inspect(password)
-    IO.inspect(newUser)
     emailTaken = Users.get_user_by_email(email)
-    IO.inspect(emailTaken)
     if emailTaken == nil do
       with {:ok, %User{} = user} <- Users.create_user(%{email: email, password_hash: Argon2.hash_pwd_salt(password)}) do
-        IO.write("wtf")
         resp = %{
           data: %{
             token: Phoenix.Token.sign(LanderWeb.Endpoint, "user_id", user.id),

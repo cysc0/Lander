@@ -24,7 +24,6 @@ defmodule LanderWeb.CourseView do
 
   def render("score.json", %{course: course}) do
   hiScore = Games.best_game_on_course(course.id)
-  IO.inspect(hiScore)
     %{id: course.id,
       name: course.name,
       path: course.path,
