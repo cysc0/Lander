@@ -12,10 +12,12 @@ const W = levelLength * blockWidth;
 const shipWidth = 16;
 const shipHeight = shipWidth;
 const tickRate = (1 / 30) * 1000;
-const gameName = "mike";
+// const gameName = "mike";
 
 class Lander extends React.Component {
     constructor(props) {
+        console.log(props);
+        let gameName = props.email;
         super(props)
         this.courseID = props.match.params.id
         let socket = props.socket;
@@ -39,11 +41,11 @@ class Lander extends React.Component {
         this.channel
             .join()
             .receive("ok", (view) => {
-                // console.log(view);
-                // console.log("did mount")
+                console.log(view);
+                console.log("did mount")
             })
             .receive("error", (reason) => {
-                // console.log(reason)
+                console.log(reason)
             })
     }
 
