@@ -29,6 +29,26 @@ defmodule Lander.Games.Games do
     |> Repo.preload(:user)
   end
 
+  def best_game_by_user(id) do
+    query = from g in Game,
+            where: g.user_id == ^id,
+            order_by: [desc: g.score]
+    Repo.all(query)
+    |> Repo.preload(:course)
+    |> Repo.preload(:user)
+    |> List.first
+  end
+
+  def best_game_on_course(id) do
+    query = from g in Game,
+            where: g.course_id == ^id,
+            order_by: [desc: g.score]
+    Repo.all(query)
+    |> Repo.preload(:course)
+    |> Repo.preload(:user)
+    |> List.first
+  end
+
   @doc """
   Gets a single game.
 

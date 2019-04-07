@@ -9,8 +9,7 @@ defmodule LanderWeb.GameController do
 
   def index(conn, %{"id" => user_id}) do
     games = Games.games_by_user(user_id)
-    # IO.inspect(games)
-    render(conn, "index.json", games: games)
+    render(conn, "scores_index.json", games: games)
   end
 
   def create(conn, %{"game" => game_params}) do

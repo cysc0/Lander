@@ -81,7 +81,6 @@ class Root extends React.Component {
       data: JSON.stringify(this.state.login_form),
       success: (resp) => {
         let state1 = _.assign({}, this.state, { session: resp.data });
-        console.log(resp.data);
         this.setState(state1);
         // window.location.href = "courses"
       }
@@ -273,18 +272,22 @@ function Users(props) {
 
 function User(props) {
   let { user } = props;
+  let hiScore = <p className="nbsp">&nbsp;</p>
+  if (user.hiscore != null) {
+    hiScore = <p className="card-text">Best Score on {user.hiscore.course}: {user.hiscore.score}</p>
+  }
   if (props.session == null) {
     return <div className="card user-card">
       <div className="card-body">
         <h5 className="card-title">{user.email}</h5>
-        {/* <p className="card-text">TODO: some text here? Maybe hi scores?</p> */}
+          {hiScore}
       </div>
     </div>;
   } else {
     return <div className="card user-card">
       <div className="card-body">
         <h5 className="card-title">{user.email}</h5>
-        {/* <p className="card-text">TODO: some text here? Maybe hi scores?</p> */}
+          {hiScore}
       </div>
       <div className="card-footer">
         <Link to={`/play/${user.email}`} id="playcourse" className="btn btn-success btn-block btn-sm">Spectate</Link>
@@ -308,19 +311,22 @@ function Courses(props) {
 }
 
 function Course(props) {
-  console.log(props.session);
+  let hiScore = <p>No high score has been set!</p>
+  if (props.course.hiScore != null) {
+    hiScore = <p className="card-text">Record set by {props.course.hiScore.user}: {props.course.hiScore.score}</p>
+  }
   if (props.session == null) {
     return <div className="card course-card">
       <div className="card-body">
         <h5 className="card-title">{props.course.name}</h5>
-        {/* <p className="card-text">TODO: some text here? Maybe hi scores?</p> */}
+        {hiScore}
       </div>
     </div>;
   } else {
     return <div className="card course-card">
       <div className="card-body">
         <h5 className="card-title">{props.course.name}</h5>
-        {/* <p className="card-text">TODO: some text here? Maybe hi scores?</p> */}
+        {hiScore}
       </div>
       <div className="card-footer">
         <Link to={`/play/${props.course.id}`} id="playcourse" className="btn btn-success btn-block btn-sm">Play</Link>
@@ -341,7 +347,6 @@ function NewCourse(props) {
 function Scores(props) {
   let {root, session} = props;
   let scores_values = root.state.scores;
-  console.log(scores_values);
   let scores = _.map(scores_values, (s) => <Score key={s.id} score={s.score} course={s.course_id} coursename={s.course_name} user={s.user_id} root={root} />)
   return <div>
     <div className="card-columns">
