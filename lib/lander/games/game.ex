@@ -209,16 +209,16 @@ defmodule Lander.Games.Game do
 
     cond do
       line3_collide ->
-        # IO.puts("line 3 collide")
+        IO.puts("line 3 collide")
 
       line2_collide ->
-        # IO.puts("line 2 collide")
+        IO.puts("line 2 collide")
 
       line1_collide ->
-        # IO.puts("line 1 collide")
+        IO.puts("line 1 collide")
 
       true ->
-        # IO.puts("no collide")
+        IO.puts("no collide")
     end
 
     line1_collide || line2_collide || line3_collide
