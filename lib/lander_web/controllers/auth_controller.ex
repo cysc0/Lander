@@ -36,9 +36,9 @@ defmodule LanderWeb.AuthController do
         IO.write("wtf")
         resp = %{
           data: %{
-            token: Phoenix.Token.sign(Lander.Endpoint, "user_id", user.id),
+            token: Phoenix.Token.sign(LanderWeb.Endpoint, "user_id", user.id),
             user_id: user.id,
-            user_email: user.email
+            email: user.email
           }
         }
 
