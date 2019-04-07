@@ -4,10 +4,9 @@ defmodule LanderWeb.UserChannel do
   alias Lander.Games.Game
   alias Lander.Games.Games
   alias Lander.Courses.Courses
+  alias Lander.BackupAgent
 
   def join("user:" <> name, payload, socket) do
-    # IO.inspect(payload)
-
     if authorized?(payload) do
       socket =
         socket
@@ -17,6 +16,33 @@ defmodule LanderWeb.UserChannel do
     else
       {:error, %{reason: "unauthorized"}}
     end
+  end
+
+  def reply(socket) do
+    view =
+      %{:ship => ship, :particles => particles, :status => status, :fuel => fuel, :score => score} =
+      socket.assigns
+
+    {:reply, {:ok, view}, socket}
+  end
+
+  def handle_game_end(socket) do
+    ship = socket.assigns[:ship]
+    particles = socket.assigns[:particles]
+
+    {new_status, new_particles} =
+      if abs(ship["dy"]) > 0.3 || abs(ship["dx"]) > 0.3 do
+        {"crashed", Game.add_explosion(particles, ship)}
+      else
+        {"landed", particles}
+      end
+
+    socket =
+      socket
+      |> assign(:status, new_status)
+      |> assign(:particles, new_particles)
+
+    reply(socket)
   end
 
   @doc """
@@ -29,6 +55,7 @@ defmodule LanderWeb.UserChannel do
     "y", fl
   }
 
+  Get fro
   keymap: {
     "w", bool,
     "a", bool,
@@ -36,18 +63,62 @@ defmodule LanderWeb.UserChannel do
     "d", bool
   }
   """
-  def handle_in("tick", %{"ship" => ship, "keymap" => keymap, "level" => level}, socket) do
-    if Game.did_collide(ship, level) do
-      {:reply, {:ok, %{:ship => ship}}, socket}
-    else
-      newShip =
-        ship
-        |> Game.handle_vertical(keymap)
-        |> Game.handle_horizontal(keymap)
-        |> Game.move(level)
+  def handle_in("tick", %{"keymap" => keymap}, socket) do
+    %{:ship => ship, :level => level, :status => status, :fuel => fuel} = socket.assigns
 
-      {:reply, {:ok, %{:ship => newShip}}, socket}
+    case {status, Game.did_collide(ship, level)} do
+      {"playing", true} ->
+        handle_game_end(socket)
+
+      {"playing", false} ->
+        new_ship =
+          socket.assigns[:ship]
+          |> Game.handle_vertical(keymap, fuel)
+          |> Game.handle_horizontal(keymap)
+          |> Game.move(level)
+
+        new_particles =
+          socket.assigns[:particles]
+          |> Game.generate_particles(keymap, ship, fuel)
+          |> Game.move_particles()
+
+        new_fuel =
+          if keymap["w"] do
+            max(fuel - 1, 0)
+          else
+            fuel
+          end
+
+        socket =
+          socket
+          |> assign(:ship, new_ship)
+          |> assign(:particles, new_particles)
+          |> assign(:fuel, new_fuel)
+
+        reply(socket)
+
+      ## any other game status
+      {_, _} ->
+        new_particles =
+          socket.assigns[:particles]
+          |> Game.move_particles()
+
+        socket =
+          socket
+          |> assign(:particles, new_particles)
+
+        reply(socket)
     end
+  end
+
+  def new_ship do
+    %{
+      "x" => 250,
+      "y" => 450,
+      "dx" => 2,
+      "dy" => 0,
+      "angle" => 90
+    }
   end
 
   def handle_in("get_course", %{"id" => course_id}, socket) do
@@ -56,7 +127,16 @@ defmodule LanderWeb.UserChannel do
       |> Game.extend_over(1000)
       |> Game.normalize_between(25, 200)
 
+    socket =
+      socket
+      |> assign(:level, course)
+      |> assign(:ship, new_ship)
+      |> assign(:particles, [])
+      |> assign(:status, "playing")
+      |> assign(:fuel, 1000)
+      |> assign(:score, -1)
 
+    IO.inspect(socket)
     {:reply, {:ok, %{:level => course}}, socket}
   end
 

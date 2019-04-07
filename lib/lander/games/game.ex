@@ -21,27 +21,31 @@ defmodule Lander.Games.Game do
   end
 
   def gravity do
-    -0.000
+    -0.005
   end
 
   def ship_width do
     16
   end
 
-  def handle_vertical(ship, %{"s" => s, "w" => w}) when w == s do
+  def handle_vertical(ship, %{"s" => s, "w" => w}, _fuel) when w == s do
     ship
   end
 
-  def handle_vertical(ship, %{"s" => true}) do
+  def handle_vertical(ship, %{"s" => true}, _fuel) do
     ship
     |> Map.put("dy", ship["dy"] - :math.sin(ship["angle"] * :math.pi() / 180) * 0.1)
     |> Map.put("dx", ship["dx"] - :math.cos(ship["angle"] * :math.pi() / 180) * 0.1)
   end
 
-  def handle_vertical(ship, %{"w" => true}) do
+  def handle_vertical(ship, %{"w" => true}, 0) do
     ship
-    |> Map.put("dy", ship["dy"] + :math.sin(ship["angle"] * :math.pi() / 180) * 0.1)
-    |> Map.put("dx", ship["dx"] + :math.cos(ship["angle"] * :math.pi() / 180) * 0.1)
+  end
+
+  def handle_vertical(ship, %{"w" => true}, _fuel) do
+    ship
+    |> Map.put("dy", ship["dy"] + :math.sin(ship["angle"] * :math.pi() / 180) * 0.01)
+    |> Map.put("dx", ship["dx"] + :math.cos(ship["angle"] * :math.pi() / 180) * 0.01)
   end
 
   def handle_horizontal(ship, %{"a" => a, "d" => d}) when a == d do
@@ -75,8 +79,6 @@ defmodule Lander.Games.Game do
 
   def extend_over(level, new_len) do
     old_len = Enum.count(level)
-    # IO.puts("Here!!!")
-    # IO.inspect(level)
 
     Enum.map(0..(new_len - 1), fn i ->
       index_in_old = i / (new_len - 1) * (old_len - 1)
@@ -92,12 +94,15 @@ defmodule Lander.Games.Game do
     width = max - min
     max_height = Enum.max(level)
     min_height = Enum.min(level)
+
     cond do
       max_height < max && min_height > min ->
         level
+
       max_height + min_height < max ->
         level
         |> Enum.map(fn x -> x + min end)
+
       true ->
         Enum.map(level, fn x ->
           (x - min_height) / (max_height - min_height) * width + min
@@ -148,6 +153,11 @@ defmodule Lander.Games.Game do
 
   And that's how you determine if a ship is even TOUCHING the ground
   """
+
+  def did_collide(ship, []) do
+    false
+  end
+
   def did_collide(ship, level) do
     x = ship["x"]
     y = ship["y"]
@@ -170,57 +180,121 @@ defmodule Lander.Games.Game do
     #    to avoid / by zero err
     # line 1: top left to bottom left, or tl_xy -> bl_xy
     line1_collide =
-      if abs(tl_xy.x - bl_xy.x) < 0.01 do
+      if abs(tl_xy.x - bl_xy.x) < 1 do
         false
       else
         line1m = (tl_xy.y - bl_xy.y) / (tl_xy.x - bl_xy.x)
         line1b = tl_xy.y - line1m * tl_xy.x
 
-        Enum.any?(floor(tl_xy.x)..ceil(tl_xy.x), fn x ->
+        Enum.any?(ceil(tl_xy.x)..floor(tl_xy.x), fn x ->
           Enum.at(level, x) > line1m * x + line1b
         end)
       end
 
     # line 2: bottom left to bottom right, or bl_xy -> br_xy
     line2_collide =
-      if abs(bl_xy.x - br_xy.x) < 0.01 do
+      if abs(bl_xy.x - br_xy.x) < 1 do
         false
       else
         line2m = (bl_xy.y - br_xy.y) / (bl_xy.x - br_xy.x)
         line2b = bl_xy.y - line2m * bl_xy.x
 
-        Enum.any?(floor(bl_xy.x)..ceil(br_xy.x), fn x ->
+        Enum.any?(ceil(bl_xy.x)..floor(br_xy.x), fn x ->
           Enum.at(level, x) > line2m * x + line2b
         end)
       end
 
     # line 3: bottom right to top right, or br_xy -> tr_xy
     line3_collide =
-      if abs(br_xy.x - tr_xy.x) < 0.01 do
+      if abs(br_xy.x - tr_xy.x) < 1 do
         false
       else
         line3m = (br_xy.y - tr_xy.y) / (br_xy.x - tr_xy.x)
         line3b = br_xy.y - line3m * br_xy.x
+        IO.puts(line3m)
 
-        Enum.any?(floor(br_xy.x)..ceil(tr_xy.x), fn x ->
-          Enum.at(level, x) > line3m * x + line3b
+        Enum.any?(ceil(br_xy.x)..floor(tr_xy.x), fn x ->
+          if Enum.at(level, x) > line3m * x + line3b do
+            IO.inspect(br_xy)
+            IO.inspect(tr_xy)
+            IO.puts(x)
+            Enum.at(level, x)
+            IO.puts(line3m)
+            IO.puts(line3b)
+            IO.puts(line3m * x + line3b)
+            true
+          else
+            false
+          end
         end)
       end
 
     cond do
-      line3_collide ->
-        # IO.puts("line 3 collide")
+      line1_collide ->
+        IO.inspect("line1")
 
       line2_collide ->
-        # IO.puts("line 2 collide")
+        IO.inspect("line2")
 
-      line1_collide ->
-        # IO.puts("line 1 collide")
+      line3_collide ->
+        IO.inspect("line3")
 
       true ->
-        # IO.puts("no collide")
+        IO.puts("no collide")
     end
 
     line1_collide || line2_collide || line3_collide
+  end
+
+  def generate_particles(old_particles, %{"w" => w}, ship, fuel) when w and fuel > 0 do
+    particle = %{
+      "x" => ship["x"] + Enum.random(-4..4),
+      "y" => ship["y"] + Enum.random(-4..4),
+      "dy" => :math.sin(ship["angle"] * :math.pi() / 180) * Enum.random(-5..-2),
+      "dx" => :math.cos(ship["angle"] * :math.pi() / 180) * Enum.random(-5..-2),
+      "ttl" => Enum.random(25..50)
+    }
+
+    IO.inspect(particle)
+
+    [particle | old_particles]
+  end
+
+  def generate_particles(old_particles, _keymap, _ship, _fuel) do
+    old_particles
+  end
+
+  def add_explosion(existing_particles, ship) do
+    new_particles =
+      Enum.map(0..150, fn _i ->
+        %{
+          "x" => ship["x"] + Enum.random(0..5),
+          "y" => ship["y"] + Enum.random(0..5),
+          "dx" => Enum.random(-15..15),
+          "dy" => Enum.random(-15..15),
+          "ttl" => Enum.random(50..150)
+        }
+      end)
+
+    existing_particles ++ new_particles
+  end
+
+  def move_particles(particles) do
+    particles
+    |> Enum.map(fn particle ->
+      Map.put(particle, "ttl", particle["ttl"] - 1)
+    end)
+    |> Enum.filter(fn particle ->
+      particle["ttl"] > 0
+    end)
+    |> Enum.map(fn particle ->
+      %{
+        "x" => particle["x"] + particle["dx"],
+        "y" => particle["y"] + particle["dy"],
+        "dx" => particle["dx"],
+        "dy" => particle["dy"],
+        "ttl" => particle["ttl"]
+      }
+    end)
   end
 end
