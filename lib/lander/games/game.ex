@@ -243,7 +243,7 @@ defmodule Lander.Games.Game do
         IO.puts("no collide")
     end
 
-    line1_collide || line2_collide || line3_collide
+    %{:left => line1_collide, :bottom => line2_collide, :right => line3_collide}
   end
 
   def generate_particles(old_particles, %{"w" => w}, ship, fuel) when w and fuel > 0 do

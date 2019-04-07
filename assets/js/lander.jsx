@@ -74,7 +74,7 @@ class Lander extends React.Component {
                 this.setState({ level: view.level }))
         document.addEventListener("keydown", (keyEvent) => this.keyEvent(true, keyEvent.keyCode))
         document.addEventListener("keyup", (keyEvent) => this.keyEvent(false, keyEvent.keyCode))
-        setInterval(this.tick, tickRate)
+        setTimeout(this.tick, tickRate)
     }
 
     tick = () => {
@@ -89,6 +89,9 @@ class Lander extends React.Component {
                     fuel: view.fuel
                 })
             })
+        if (this.state.status == "playing" || this.state.particles != []) {
+            setTimeout(this.tick, tickRate)
+        }
     }
 
     drawLevel = () => {

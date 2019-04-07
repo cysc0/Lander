@@ -1,6 +1,7 @@
 defmodule LanderWeb.UserChannel do
   use LanderWeb, :channel
 
+  alias Lander.BackupAgent
   alias Lander.Games.Game
   alias Lander.Games.Games
   alias Lander.Courses.Courses
@@ -23,10 +24,20 @@ defmodule LanderWeb.UserChannel do
       %{:ship => ship, :particles => particles, :status => status, :fuel => fuel, :score => score} =
       socket.assigns
 
+    BackupAgent.put(socket.assigns[:name], socket.assigns)
     {:reply, {:ok, view}, socket}
   end
 
-  def handle_game_end(socket) do
+  def handle_game_end(socket, %{:left => left, :right => right}) when left or right do
+    socket =
+      socket
+      |> assign(:status, "crashed")
+      |> assign(:particles, Game.add_explosion(socket.assigns[:particles], socket.assigns[:ship]))
+
+    reply(socket)
+  end
+
+  def handle_game_end(socket, _collsion_matrix) do
     ship = socket.assigns[:ship]
     particles = socket.assigns[:particles]
 
@@ -64,11 +75,15 @@ defmodule LanderWeb.UserChannel do
   }
   """
   def handle_in("tick", %{"keymap" => keymap}, socket) do
-    %{:ship => ship, :level => level, :status => status, :fuel => fuel} = socket.assigns
+    %{:ship => ship, :level => level, :status => status, :fuel => fuel} =
+      BackupAgent.get(socket.assigns[:name])
 
-    case {status, Game.did_collide(ship, level)} do
+    collision_matrix = Game.did_collide(ship, level)
+    did_collide = collision_matrix.right || collision_matrix.bottom || collision_matrix.left
+
+    case {status, did_collide} do
       {"playing", true} ->
-        handle_game_end(socket)
+        handle_game_end(socket, collision_matrix)
 
       {"playing", false} ->
         new_ship =
@@ -137,6 +152,7 @@ defmodule LanderWeb.UserChannel do
       |> assign(:score, -1)
 
     IO.inspect(socket)
+    BackupAgent.put(socket.assigns[:name], socket.assigns)
     {:reply, {:ok, %{:level => course}}, socket}
   end
 
