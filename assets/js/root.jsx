@@ -300,7 +300,14 @@ function User(props) {
 
 function Courses(props) {
   let courses = _.map(props.courses, (c) => <Course key={c.id} course={c} session={props.session} root={props.root} />);
-  return <div>
+  if (props.session == null) {
+    return <div>
+    <div className="card-columns">
+      {courses}
+    </div>
+  </div>;
+  } else {
+    return <div>
     <div className="card-columns">
       {courses}
     </div>
@@ -308,6 +315,7 @@ function Courses(props) {
       <Link to={"/courses/create"} id="newcourse" className="btn btn-info btn-block">New Course</Link>
     </div>
   </div>;
+  }
 }
 
 function Course(props) {

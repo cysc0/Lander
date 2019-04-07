@@ -23,10 +23,17 @@ defmodule LanderWeb.CourseView do
   end
 
   def render("score.json", %{course: course}) do
-  hiScore = Games.best_game_on_course(course.id)
-    %{id: course.id,
-      name: course.name,
-      path: course.path,
-      hiScore: %{score: hiScore.score,  user: hiScore.user.email}}
+    hiScore = Games.best_game_on_course(course.id)
+    if hiScore == nil do
+      %{id: course.id,
+        name: course.name,
+        path: course.path,
+        hiScore: nil}
+    else
+      %{id: course.id,
+        name: course.name,
+        path: course.path,
+        hiScore: %{score: hiScore.score,  user: hiScore.user.email}}
+    end
   end
 end
