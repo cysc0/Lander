@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { Map, GoogleApiWrapper, Marker, InfoWindow } from 'google-maps-react';
+import { Link, BrowserRouter as Router, Route } from 'react-router-dom';
 import _ from 'lodash';
 
 
@@ -11,6 +12,7 @@ import _ from 'lodash';
 class MapContainer extends React.Component {
   constructor(props) {
     super(props);
+    this.homeRoot = props.homeroot;
   }
   state = {
     showingInfoWindow: false,
@@ -30,8 +32,9 @@ class MapContainer extends React.Component {
     root.setState(root.state);
   }
 
-  postCourse(path) {
+  postCourse(root) {
     let courseTitle = $("#courseTitle")[0].value;
+    let path = root.state.path;
     if (courseTitle == "" ) {
       alert("Enter a course title")
     } else {
@@ -43,7 +46,7 @@ class MapContainer extends React.Component {
                               name: courseTitle}
                               }),
         success: (resp) => {
-          window.location.pathname = "/courses"
+          this.homeRoot.fetchCourses();
         }
       });
     }
@@ -56,7 +59,7 @@ class MapContainer extends React.Component {
                 <input type="text" id="courseTitle" placeholder="Enter a course title"></input>
               </div>
               <div className="col-4">
-                <button className="btn btn-primary btn-sm btn-block" onClick={() => root.postCourse(root.state.path)}>Go!</button>
+                <Link to={"/courses"} className="btn btn-primary btn-sm btn-block" onClick={() => root.postCourse(root)}>Go!</Link>
               </div>
             </div>
     } else {

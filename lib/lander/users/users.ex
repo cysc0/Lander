@@ -74,6 +74,10 @@ defmodule Lander.Users do
     |> User.changeset(attrs)
     |> Repo.insert()
   end
+  
+  def get_user_by_email(email) do
+    Repo.get_by(User, email: email)
+  end
 
   @doc """
   Authenticates a user.

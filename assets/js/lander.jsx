@@ -16,6 +16,8 @@ const gameName = "kim@dot.com";
 
 class Lander extends React.Component {
     constructor(props) {
+        console.log(props);
+        let gameName = props.email;
         super(props)
         console.log(props)
         this.courseID = props.match.params.id
@@ -44,8 +46,10 @@ class Lander extends React.Component {
         this.channel
             .join()
             .receive("ok", (view) => {
+
             })
             .receive("error", (reason) => {
+
             })
     }
 

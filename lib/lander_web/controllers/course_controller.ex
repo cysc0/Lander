@@ -8,7 +8,7 @@ defmodule LanderWeb.CourseController do
 
   def index(conn, _params) do
     courses = Courses.list_courses()
-    render(conn, "index.json", courses: courses)
+    render(conn, "scores_index.json", courses: courses)
   end
 
   def create(conn, %{"course" => course_params}) do

@@ -58,8 +58,7 @@ class Root extends React.Component {
     $.ajax("/api/v1/games", {
       method: "get",
       contentType: "application/json; charset=UTF-8",
-      // data: JSON.stringify(this.state.session.user_id),
-      data: ({id: 1}),
+      data: {id: this.state.session.user_id},
       success: (resp) => {
         let state1 = _.assign({}, this.state, { scores: resp.data });
         this.setState(state1);
@@ -139,16 +138,16 @@ class Root extends React.Component {
             <SignupForm session={this.state.session} root={this} />
           } />
           <Route path="/users" exact={true} render={() =>
-            <Users users={this.state.users} root={this} />
+            <Users users={this.state.users} session={this.state.session} root={this} />
           } />
           <Route path="/courses" exact={true} render={() =>
-            <Courses courses={this.state.courses} root={this} />
+            <Courses courses={this.state.courses} session={this.state.session} root={this} />
           } />
           <Route path="/courses/create" exact={true} render={() =>
             <NewCourse root={this} secret_api_maps={this.state.maps_api_key} />
           } />
           <Route path="/play/:id" exact={true} render={(props) =>
-            <Lander {...props} socket={socket} session={this.state.session} />
+            <Lander {...props} socket={socket} email={(this.state.session == null) ? null : this.state.session.email} />
           } />
           <Route path="/myscores" exact={true} render={(props) =>
             <Scores session={this.state.session} root={this} />
@@ -187,8 +186,7 @@ function Header(props) {
     nav_bar = <div className="col-4" id="navLinks">
       <p>
         <Link to={"/users"} onClick={(ev) => root.fetchUsers()}>Users</Link>&nbsp;|&nbsp;
-        <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>&nbsp;|&nbsp;
-        <Link to={"/myscores"} onClick={(ev) => root.fetchMyScores()}>My Scores</Link>
+        <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>
       </p>
     </div>;
   }
@@ -198,7 +196,7 @@ function Header(props) {
         <tbody>
           <tr>
             <td>
-              <p className="sessionInfo sessionGreeting sessionText">Hello, {session.user_id}</p>
+              <p className="sessionInfo sessionGreeting sessionText">Hello, {session.email}</p>
             </td>
             <td id="sessionLogOut">
               <Link to="/" className="btn btn-sm btn-secondary btn-block sessionInfo" onClick={() => root.logout()}>Logout</Link>
@@ -211,7 +209,7 @@ function Header(props) {
       <p>
         <Link to={"/users"} onClick={(ev) => root.fetchUsers()}>Users</Link>&nbsp;|&nbsp;
         <Link to={"/courses"} onClick={(ev) => root.fetchCourses()}>Courses</Link>&nbsp;|&nbsp;
-        <Link to={"/myscores"} onClick={(ev) => root.fetchCourses()}>My Scores</Link>
+        <Link to={"/myscores"} onClick={(ev) => root.fetchMyScores()}>My Scores</Link>
       </p>
     </div>;
   }
@@ -256,7 +254,7 @@ function SignupForm(props) {
         onChange={(ev) => root.update_signup_form({ password: ev.target.value })} />
     </div>
     <div className="card-footer text-muted">
-      <Link to={"/mytasks"} className="btn btn-primary btn-block" onClick={() => root.signup()}>Go!</Link>
+      <Link to={"/courses"} className="btn btn-primary btn-block" onClick={() => root.signup()}>Go!</Link>
     </div>
   </div>
 }
@@ -264,7 +262,7 @@ function SignupForm(props) {
 ///////////////////////////////////// USERS //////////////////////////////////////
 
 function Users(props) {
-  let users = _.map(props.users, (user) => <User key={user.id} user={user} />);
+  let users = _.map(props.users, (user) => <User key={user.id} user={user} session={props.session} />);
   return <div>
     <div className="card-columns">
       {users}
@@ -274,23 +272,42 @@ function Users(props) {
 
 function User(props) {
   let { user } = props;
-  let targetUrl = window.location.href + "/" + user.email;
-  return <div className="card user-card">
-    <div className="card-body">
-      <h5 className="card-title">{user.email}</h5>
-      {/* <p className="card-text">TODO: some text here? Maybe hi scores?</p> */}
-    </div>
-    <div className="card-footer">
-      {/* <a href={targetUrl} className="btn btn-success btn-block btn-sm">TODO: spectate link</a> */}
-    </div>
-  </div>;
+  let hiScore = <p className="nopad">&nbsp;</p>
+  if (user.hiscore != null) {
+    hiScore = <p className="card-text">Best Score on {user.hiscore.course}: {user.hiscore.score}</p>
+  }
+  if (props.session == null) {
+    return <div className="card user-card">
+      <div className="card-body">
+        <h5 className="card-title">{user.email}</h5>
+          {hiScore}
+      </div>
+    </div>;
+  } else {
+    return <div className="card user-card">
+      <div className="card-body">
+        <h5 className="card-title">{user.email}</h5>
+          {hiScore}
+      </div>
+      <div className="card-footer">
+        <Link to={`/play/${user.email}`} id="playcourse" className="btn btn-success btn-block btn-sm">Spectate</Link>
+      </div>
+    </div>;
+  }
 }
 
 //////////////////////////////////// COURSES /////////////////////////////////////
 
 function Courses(props) {
-  let courses = _.map(props.courses, (c) => <Course key={c.id} course={c} root={props.root} />);
-  return <div>
+  let courses = _.map(props.courses, (c) => <Course key={c.id} course={c} session={props.session} root={props.root} />);
+  if (props.session == null) {
+    return <div>
+    <div className="card-columns">
+      {courses}
+    </div>
+  </div>;
+  } else {
+    return <div>
     <div className="card-columns">
       {courses}
     </div>
@@ -298,23 +315,38 @@ function Courses(props) {
       <Link to={"/courses/create"} id="newcourse" className="btn btn-info btn-block">New Course</Link>
     </div>
   </div>;
+  }
 }
 
 function Course(props) {
-  return <div className="card course-card">
-    <div className="card-body">
-      <h5 className="card-title">{props.course.name}</h5>
-      {/* <p className="card-text">TODO: some text here? Maybe hi scores?</p> */}
-    </div>
-    <div className="card-footer">
-      <Link to={`/play/${props.course.id}`} id="playcourse" className="btn btn-success btn-block btn-sm">Play</Link>
-    </div>
-  </div>;
+  let hiScore = <p className="nopad">No high score has been set!</p>
+  if (props.course.hiScore != null) {
+    hiScore = <p className="card-text">Record set by {props.course.hiScore.user}: {props.course.hiScore.score}</p>
+  }
+  if (props.session == null) {
+    return <div className="card course-card">
+      <div className="card-body">
+        <h5 className="card-title">{props.course.name}</h5>
+        {hiScore}
+      </div>
+    </div>;
+  } else {
+    return <div className="card course-card">
+      <div className="card-body">
+        <h5 className="card-title">{props.course.name}</h5>
+        {hiScore}
+      </div>
+      <div className="card-footer">
+        <Link to={`/play/${props.course.id}`} id="playcourse" className="btn btn-success btn-block btn-sm">Play</Link>
+      </div>
+    </div>;
+  }
+  
 }
 
 function NewCourse(props) {
   return <div>
-    <MapContainer secret_api_maps={props.secret_api_maps}></MapContainer>
+    <MapContainer secret_api_maps={props.secret_api_maps} homeroot={props.root}></MapContainer>
   </div>;
 }
 
@@ -335,10 +367,10 @@ function Score(props) {
   return <div className="card">
     <div className="card-body">
       <h5 className="card-title">{props.coursename}</h5>
-      <p className="card-text">Score: {props.score}</p>
+      <p className="card-text nopad">Score: {props.score}</p>
     </div>
     <div className="card-footer">
-      <Link to={`/play/${props.course}`} id="playcourse" className="btn btn-success btn-block btn-sm">Play</Link>
+      <Link to={`/play/${props.course}`} id="playcourse" className="btn btn-success btn-block btn-sm">Play again</Link>
     </div>
   </div>;
 }
