@@ -1,7 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import _ from 'lodash';
-import { Stage, Layer, Rect, Text } from 'react-konva';
+import { Stage, Layer, Rect, Text, Circle } from 'react-konva';
 import Konva from 'konva';
 import $ from 'jquery';
 
@@ -12,14 +12,16 @@ const W = levelLength * blockWidth;
 const shipWidth = 16;
 const shipHeight = shipWidth;
 const tickRate = (1 / 30) * 1000;
-// const gameName = "mike";
+const gameName = "kim@dot.com";
 
 class Lander extends React.Component {
     constructor(props) {
         console.log(props);
         let gameName = props.email;
         super(props)
+        console.log(props)
         this.courseID = props.match.params.id
+        this.session = props.session
         let socket = props.socket;
         this.channel = socket.channel("user:" + gameName, {});
         this.keyMap = {
@@ -36,28 +38,19 @@ class Lander extends React.Component {
                 dx: 0,
                 dy: 0,
                 angle: 90
-            }
+            },
+            particles: [],
+            status: "initializing",
+            fuel: 0
         }
         this.channel
             .join()
             .receive("ok", (view) => {
-                console.log(view);
-                console.log("did mount")
+
             })
             .receive("error", (reason) => {
-                console.log(reason)
-            })
-    }
 
-    randomLevel() {
-        let level = []
-        let lastBlock = 100;
-        for (let i = 0; i < levelLength; i++) {
-            level.push(lastBlock)
-            let newBlock = lastBlock + Math.floor((Math.random() * 11) - 5)
-            lastBlock = newBlock;
-        }
-        return level;
+            })
     }
 
     keyEvent = (isKeyDown, keyCode) => {
@@ -81,25 +74,43 @@ class Lander extends React.Component {
 
     componentDidMount() {
         this.channel.push("get_course", {
-            id: this.courseID
+            id: this.courseID,
+            session: this.session
         })
-            .receive("ok", (view) =>
-                this.setState({ level: view.level }))
+            .receive("ok", (view) => {
+                this.setState({ level: view.level })
+                setTimeout(this.tick, tickRate)
+                console.log(view)
+            })
+            .receive("error", (view) =>
+                console.log("no op"))
         document.addEventListener("keydown", (keyEvent) => this.keyEvent(true, keyEvent.keyCode))
         document.addEventListener("keyup", (keyEvent) => this.keyEvent(false, keyEvent.keyCode))
-        //setInterval(this.tick, tickRate)
     }
 
     tick = () => {
-        let newShip = _.ass
         this.channel
-            .push("tick", {
-                ship: this.state.ship,
-                keymap: this.keyMap,
-                level: this.state.level
-            })
+            .push("tick", { keymap: this.keyMap })
             .receive("ok", (view) => {
-                this.setState({ ship: view.ship })
+                this.setState({
+                    status: view.status,
+                    ship: view.ship,
+                    particles: view.particles,
+                    fuel: view.fuel,
+                    level: view.level
+                })
+            })
+        if (this.state.status == "playing" || this.state.particles != []) {
+            setTimeout(this.tick, tickRate)
+        }
+    }
+
+    click = (x) => {
+        this.channel.push("destroy", { x: x })
+            .receive("ok", (view) => {
+                this.setState({
+                    level: view.level
+                })
             })
     }
 
@@ -114,15 +125,113 @@ class Lander extends React.Component {
                     width={blockWidth}
                     height={blockWidth * y}
                     fill={'black'}
+                    onClick={() => this.click(x)}
                 />
             )
         });
         return result;
     }
 
+    drawParticles = () => {
+        let result = []
+        _.map(this.state.particles, (p, key) => {
+            result.push(
+                <Circle
+                    key={key}
+                    x={p.x}
+                    y={H - p.y}
+                    radius={5}
+                    fill={"orange"}
+                />
+            )
+        })
+        return result
+    }
+
+    drawShip = () => {
+        if (this.state.status != "crashed" && this.state.status != "initializing") {
+            return <Rect
+                rotation={-1 * this.state.ship.angle}
+                x={this.state.ship.x}
+                y={H - this.state.ship.y}
+                offsetX={shipWidth / 2}
+                offsetY={shipWidth / 2}
+                width={shipWidth}
+                height={shipHeight}
+                fill={'blue'}
+                shadowBlur={5}
+            />;
+        }
+        else {
+            return null;
+        }
+    }
+
+    getScore = () => {
+        let text = "";
+        if (this.state.status == "playing") {
+            return null;
+        }
+        else if (this.state.status == "Landed") {
+            text = this.state.score;
+        }
+        else if (this.state.status == "crashed") {
+            text = "Score: 0 (You Crashed!)"
+        }
+        return <Text
+            align={"center"}
+            fontFamily={"Courier New"}
+            x={W / 2 - 300}
+            y={H / 2 - 100}
+            fontSize={32}
+            text={text}
+        />;
+    }
+
+    getStats = () => {
+        let session_info_msg = null;
+        if (this.session == null) {
+            session_info_msg = <Text
+                fontSize={14}
+                fontFamily={"Courier New"}
+                x={W - 400}
+                y={20}
+                text={"You must be logged in to play or interact!"}
+                key={1}
+            />;
+        }
+        return [
+            <Text
+                fontSize={14}
+                fontFamily={"Courier New"}
+                x={20}
+                y={20}
+                text={`Horizontal Speed: ${Math.round(this.state.ship.dx * 10)}`}
+                key={1}
+            />,
+            <Text
+                x={20}
+                y={40}
+                fontSize={14}
+                fontFamily={"Courier New"}
+                text={`Vertical Speed: ${Math.round(this.state.ship.dy * 10)}`}
+                key={2}
+            />,
+            <Text
+                x={20}
+                y={60}
+                fontSize={14}
+                fontFamily={"Courier New"}
+                text={`Fuel: ${Math.round(this.state.fuel / 4)}`}
+                key={3}
+            />,
+            session_info_msg
+        ];
+    }
+
     render() {
         return (<Stage border="10px solid black" width={W} height={H}>
-            <Layer>
+            <Layer id="background">
                 <Rect
                     x={0}
                     y={0}
@@ -132,19 +241,16 @@ class Lander extends React.Component {
                 />
             </Layer>
             <Layer >
-                <Rect
-                    rotation={-1 * this.state.ship.angle}
-                    x={this.state.ship.x}
-                    y={H - this.state.ship.y}
-                    offsetX={shipWidth / 2}
-                    offsetY={shipWidth / 2}
-                    width={shipWidth}
-                    height={shipHeight}
-                    fill={'blue'}
-                    shadowBlur={5}
-                />
+                {this.drawParticles()}
+            </Layer>
+            <Layer id="ship-and-level">
+                {this.drawShip()}
                 {this.drawLevel()}
             </ Layer>
+            <Layer id="stats">
+                {this.getScore()}
+                {this.getStats()}
+            </Layer>
         </Stage>);
     }
 }

@@ -4,6 +4,7 @@ alias Lander.Games.Game
 alias Lander.Courses.Course
 
 user1 = %User{email: "kim@dot.com", admin: true, password_hash: Argon2.hash_pwd_salt("password")}
+
 user2 = %User{email: "user@email.com", admin: true, password_hash: Argon2.hash_pwd_salt("password")}
 user3 = %User{email: "user@email.com", admin: true, password_hash: Argon2.hash_pwd_salt("password")}
 
