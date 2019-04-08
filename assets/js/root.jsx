@@ -272,7 +272,7 @@ function Users(props) {
 
 function User(props) {
   let { user } = props;
-  let hiScore = <p className="nbsp">&nbsp;</p>
+  let hiScore = <p className="nopad">&nbsp;</p>
   if (user.hiscore != null) {
     hiScore = <p className="card-text">Best Score on {user.hiscore.course}: {user.hiscore.score}</p>
   }
@@ -319,7 +319,7 @@ function Courses(props) {
 }
 
 function Course(props) {
-  let hiScore = <p>No high score has been set!</p>
+  let hiScore = <p className="nopad">No high score has been set!</p>
   if (props.course.hiScore != null) {
     hiScore = <p className="card-text">Record set by {props.course.hiScore.user}: {props.course.hiScore.score}</p>
   }
@@ -367,7 +367,7 @@ function Score(props) {
   return <div className="card">
     <div className="card-body">
       <h5 className="card-title">{props.coursename}</h5>
-      <p className="card-text">Score: {props.score}</p>
+      <p className="card-text nopad">Score: {props.score}</p>
     </div>
     <div className="card-footer">
       <Link to={`/play/${props.course}`} id="playcourse" className="btn btn-success btn-block btn-sm">Play again</Link>
