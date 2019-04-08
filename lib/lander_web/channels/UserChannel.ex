@@ -65,7 +65,7 @@ defmodule LanderWeb.UserChannel do
     level = socket.assigns[:level]
 
     {new_status, new_particles} =
-      if abs(ship["dy"]) > 100 || abs(ship["dx"]) > 0.3 || Game.uneven_terrain(level, ship["x"]) ||
+      if abs(ship["dy"]) > 0.3 || abs(ship["dx"]) > 0.3 || Game.uneven_terrain(level, ship["x"]) ||
            abs(90 - ship["angle"]) > 5 do
         {"crashed", Game.add_explosion(particles, ship)}
       else
@@ -76,7 +76,7 @@ defmodule LanderWeb.UserChannel do
       if new_status == "crashed" do
         0.0
       else
-        1000 - socket.assigns[:ticks] + 5 * ship["dy"] + 2 * socket.assigns[:fuel]
+        max(1500 - socket.assigns[:ticks] + 5 * ship["dy"] + 5 * socket.assigns[:fuel], 0)
       end
 
     course = Courses.get_course!(socket.assigns[:course_id])
@@ -175,8 +175,6 @@ defmodule LanderWeb.UserChannel do
           socket
           |> assign(:particles, new_particles)
 
-        IO.puts(socket.assigns[:status])
-
         reply(socket)
     end
   end
@@ -214,7 +212,7 @@ defmodule LanderWeb.UserChannel do
     %{
       "x" => 250,
       "y" => 450,
-      "dx" => 0,
+      "dx" => 1.2,
       "dy" => 0,
       "angle" => 90
     }
@@ -230,6 +228,7 @@ defmodule LanderWeb.UserChannel do
       {%User{:email => ^socket_name}, _} ->
         course =
           Courses.get_path_from_id(course_id)
+          |> Game.all_positive
           |> Game.extend_over(1000)
           |> Game.normalize_between(25, 200)
 

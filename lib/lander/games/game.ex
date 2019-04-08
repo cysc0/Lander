@@ -21,7 +21,7 @@ defmodule Lander.Games.Game do
   end
 
   def gravity do
-    -0.000
+    -0.005
   end
 
   def ship_width do
@@ -34,8 +34,6 @@ defmodule Lander.Games.Game do
 
   def handle_vertical(ship, %{"s" => true}, _fuel) do
     ship
-    |> Map.put("dy", ship["dy"] - :math.sin(ship["angle"] * :math.pi() / 180) * 0.1)
-    |> Map.put("dx", ship["dx"] - :math.cos(ship["angle"] * :math.pi() / 180) * 0.1)
   end
 
   def handle_vertical(ship, %{"w" => true}, 0) do
@@ -75,6 +73,17 @@ defmodule Lander.Games.Game do
     |> Map.put("x", ship["x"] + ship["dx"])
     |> Map.put("y", ship["y"] + ship["dy"])
     |> Map.put("dy", ship["dy"] + gravity)
+  end
+
+  def all_positive(level) do
+    min = Enum.min(level)
+    if min < 0 do
+      Enum.map(level, fn y ->
+        y + abs(min)
+      end)
+    else
+      level
+    end
   end
 
   def extend_over(level, new_len) do
