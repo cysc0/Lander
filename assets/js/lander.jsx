@@ -12,12 +12,14 @@ const W = levelLength * blockWidth;
 const shipWidth = 16;
 const shipHeight = shipWidth;
 const tickRate = (1 / 30) * 1000;
-const gameName = "mike";
+const gameName = "kim@dot.com";
 
 class Lander extends React.Component {
     constructor(props) {
         super(props)
+        console.log(props)
         this.courseID = props.match.params.id
+        this.session = props.session
         let socket = props.socket;
         this.channel = socket.channel("user:" + gameName, {});
         this.keyMap = {
@@ -36,7 +38,7 @@ class Lander extends React.Component {
                 angle: 90
             },
             particles: [],
-            status: "playing",
+            status: "initializing",
             fuel: 0
         }
         this.channel
@@ -68,17 +70,21 @@ class Lander extends React.Component {
 
     componentDidMount() {
         this.channel.push("get_course", {
-            id: this.courseID
+            id: this.courseID,
+            session: this.session
         })
-            .receive("ok", (view) =>
-                this.setState({ level: view.level }))
+            .receive("ok", (view) => {
+                this.setState({ level: view.level })
+                setTimeout(this.tick, tickRate)
+                console.log(view)
+            })
+            .receive("error", (view) =>
+                console.log("no op"))
         document.addEventListener("keydown", (keyEvent) => this.keyEvent(true, keyEvent.keyCode))
         document.addEventListener("keyup", (keyEvent) => this.keyEvent(false, keyEvent.keyCode))
-        setTimeout(this.tick, tickRate)
     }
 
     tick = () => {
-        let newShip = _.ass
         this.channel
             .push("tick", { keymap: this.keyMap })
             .receive("ok", (view) => {
@@ -86,12 +92,22 @@ class Lander extends React.Component {
                     status: view.status,
                     ship: view.ship,
                     particles: view.particles,
-                    fuel: view.fuel
+                    fuel: view.fuel,
+                    level: view.level
                 })
             })
         if (this.state.status == "playing" || this.state.particles != []) {
             setTimeout(this.tick, tickRate)
         }
+    }
+
+    click = (x) => {
+        this.channel.push("destroy", { x: x })
+            .receive("ok", (view) => {
+                this.setState({
+                    level: view.level
+                })
+            })
     }
 
     drawLevel = () => {
@@ -105,6 +121,7 @@ class Lander extends React.Component {
                     width={blockWidth}
                     height={blockWidth * y}
                     fill={'black'}
+                    onClick={() => this.click(x)}
                 />
             )
         });
@@ -128,7 +145,7 @@ class Lander extends React.Component {
     }
 
     drawShip = () => {
-        if (this.state.status != "crashed") {
+        if (this.state.status != "crashed" && this.state.status != "initializing") {
             return <Rect
                 rotation={-1 * this.state.ship.angle}
                 x={this.state.ship.x}
@@ -168,6 +185,17 @@ class Lander extends React.Component {
     }
 
     getStats = () => {
+        let session_info_msg = null;
+        if (this.session == null) {
+            session_info_msg = <Text
+                fontSize={14}
+                fontFamily={"Courier New"}
+                x={W - 400}
+                y={20}
+                text={"You must be logged in to play or interact!"}
+                key={1}
+            />;
+        }
         return [
             <Text
                 fontSize={14}
@@ -192,7 +220,8 @@ class Lander extends React.Component {
                 fontFamily={"Courier New"}
                 text={`Fuel: ${Math.round(this.state.fuel / 4)}`}
                 key={3}
-            />
+            />,
+            session_info_msg
         ];
     }
 

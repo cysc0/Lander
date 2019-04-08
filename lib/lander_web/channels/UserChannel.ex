@@ -6,6 +6,8 @@ defmodule LanderWeb.UserChannel do
   alias Lander.Games.Games
   alias Lander.Courses.Courses
   alias Lander.BackupAgent
+  alias Lander.Users
+  alias Lander.Users.User
 
   def join("user:" <> name, payload, socket) do
     if authorized?(payload) do
@@ -21,10 +23,31 @@ defmodule LanderWeb.UserChannel do
 
   def reply(socket) do
     view =
-      %{:ship => ship, :particles => particles, :status => status, :fuel => fuel, :score => score} =
-      socket.assigns
+      %{
+        :ship => ship,
+        :particles => particles,
+        :status => status,
+        :fuel => fuel,
+        :score => score,
+        :level => level
+      } = socket.assigns
 
     BackupAgent.put(socket.assigns[:name], socket.assigns)
+    {:reply, {:ok, view}, socket}
+  end
+
+  def reply_spectator(socket) do
+    view =
+      %{
+        :ship => ship,
+        :particles => particles,
+        :status => status,
+        :fuel => fuel,
+        :score => score,
+        :level => level
+      } = BackupAgent.get(socket.assigns[:name])
+
+    IO.puts("spectator")
     {:reply, {:ok, view}, socket}
   end
 
@@ -78,14 +101,22 @@ defmodule LanderWeb.UserChannel do
     %{:ship => ship, :level => level, :status => status, :fuel => fuel} =
       BackupAgent.get(socket.assigns[:name])
 
+    role = socket.assigns[:role]
+
     collision_matrix = Game.did_collide(ship, level)
     did_collide = collision_matrix.right || collision_matrix.bottom || collision_matrix.left
 
-    case {status, did_collide} do
-      {"playing", true} ->
+    case {status, did_collide, role} do
+      {_, _, "spectator"} ->
+        reply_spectator(socket)
+
+      {_, _, "none"} ->
+        reply_spectator(socket)
+
+      {"playing", true, _} ->
         handle_game_end(socket, collision_matrix)
 
-      {"playing", false} ->
+      {"playing", false, _} ->
         new_ship =
           socket.assigns[:ship]
           |> Game.handle_vertical(keymap, fuel)
@@ -109,11 +140,12 @@ defmodule LanderWeb.UserChannel do
           |> assign(:ship, new_ship)
           |> assign(:particles, new_particles)
           |> assign(:fuel, new_fuel)
+          |> assign(:level, level)
 
         reply(socket)
 
       ## any other game status
-      {_, _} ->
+      {_, _, _} ->
         new_particles =
           socket.assigns[:particles]
           |> Game.move_particles()
@@ -126,34 +158,97 @@ defmodule LanderWeb.UserChannel do
     end
   end
 
+  def handle_in("destroy", %{"x" => x}, socket) do
+    game = BackupAgent.get(socket.assigns[:name])
+    role = socket.assigns[:role]
+
+    case role do
+      "spectator" ->
+        level =
+          game.level
+          |> Enum.with_index()
+          |> Enum.map(fn {y, idx} ->
+            if idx > x - 10 and idx < x + 10 do
+              y = max(y - 10, 0)
+            else
+              y
+            end
+          end)
+
+        game =
+          game
+          |> Map.put(:level, level)
+
+        BackupAgent.put(socket.assigns[:name], game)
+        IO.inspect(game)
+        reply_spectator(socket)
+
+      _ ->
+        reply_spectator(socket)
+    end
+  end
+
   def new_ship do
     %{
       "x" => 250,
       "y" => 450,
-      "dx" => 2,
+      "dx" => 0,
       "dy" => 0,
       "angle" => 90
     }
   end
 
-  def handle_in("get_course", %{"id" => course_id}, socket) do
-    course =
-      Courses.get_path_from_id(course_id)
-      |> Game.extend_over(1000)
-      |> Game.normalize_between(25, 200)
+  def handle_in("get_course", %{"id" => course_id, "session" => session}, socket) do
+    {status, user_id} =
+      Phoenix.Token.verify(LanderWeb.Endpoint, "user_id", session["token"], max_age: 86400)
 
-    socket =
-      socket
-      |> assign(:level, course)
-      |> assign(:ship, new_ship)
-      |> assign(:particles, [])
-      |> assign(:status, "playing")
-      |> assign(:fuel, 1000)
-      |> assign(:score, -1)
+    socket_name = socket.assigns[:name]
 
-    IO.inspect(socket)
-    BackupAgent.put(socket.assigns[:name], socket.assigns)
-    {:reply, {:ok, %{:level => course}}, socket}
+    case {Users.get_user(user_id), BackupAgent.get(socket_name)} do
+      {%User{:email => ^socket_name}, _} ->
+        course =
+          Courses.get_path_from_id(course_id)
+          |> Game.extend_over(1000)
+          |> Game.normalize_between(25, 200)
+
+        socket =
+          socket
+          |> assign(:level, course)
+          |> assign(:ship, new_ship)
+          |> assign(:particles, [])
+          |> assign(:status, "playing")
+          |> assign(:fuel, 1000)
+          |> assign(:score, -1)
+          |> assign(:session, session)
+          |> assign(:role, "player")
+
+        BackupAgent.put(socket.assigns[:name], socket.assigns)
+        reply(socket)
+
+      {session, nil} ->
+        {:reply, {:error, %{}}, socket}
+
+      {session, game} ->
+        spectator_status =
+          if session == nil do
+            "none"
+          else
+            "spectator"
+          end
+
+        socket =
+          socket
+          |> assign(:level, game.level)
+          |> assign(:ship, game.ship)
+          |> assign(:particles, game.particles)
+          |> assign(:status, game.status)
+          |> assign(:fuel, game.fuel)
+          |> assign(:score, game.score)
+          |> assign(:session, session)
+          |> assign(:role, spectator_status)
+
+        reply_spectator(socket)
+    end
   end
 
   # Add authorization logic here as required.

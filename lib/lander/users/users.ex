@@ -36,15 +36,25 @@ defmodule Lander.Users do
 
   """
   def get_user!(id), do: Repo.get!(User, id)
-  
+
   def get_user(id) do
-    Repo.one from u in User,
-    where: u.id == ^id
+    if id == :missing do
+      nil
+    else
+      Repo.one(
+        from(u in User,
+          where: u.id == ^id
+        )
+      )
+    end
   end
-  
+
   def get_user_email(email) do
-    Repo.one from u in User,
-    where: u.email == ^email
+    Repo.one(
+      from(u in User,
+        where: u.email == ^email
+      )
+    )
   end
 
   @doc """

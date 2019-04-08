@@ -21,7 +21,7 @@ defmodule Lander.Games.Game do
   end
 
   def gravity do
-    -0.005
+    -0.000
   end
 
   def ship_width do
@@ -211,17 +211,10 @@ defmodule Lander.Games.Game do
       else
         line3m = (br_xy.y - tr_xy.y) / (br_xy.x - tr_xy.x)
         line3b = br_xy.y - line3m * br_xy.x
-        IO.puts(line3m)
 
         Enum.any?(ceil(br_xy.x)..floor(tr_xy.x), fn x ->
           if Enum.at(level, x) > line3m * x + line3b do
-            IO.inspect(br_xy)
-            IO.inspect(tr_xy)
-            IO.puts(x)
             Enum.at(level, x)
-            IO.puts(line3m)
-            IO.puts(line3b)
-            IO.puts(line3m * x + line3b)
             true
           else
             false
