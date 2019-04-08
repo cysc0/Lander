@@ -47,7 +47,6 @@ defmodule LanderWeb.UserChannel do
         :level => level
       } = BackupAgent.get(socket.assigns[:name])
 
-    IO.puts("spectator")
     {:reply, {:ok, view}, socket}
   end
 
@@ -63,18 +62,37 @@ defmodule LanderWeb.UserChannel do
   def handle_game_end(socket, _collsion_matrix) do
     ship = socket.assigns[:ship]
     particles = socket.assigns[:particles]
+    level = socket.assigns[:level]
 
     {new_status, new_particles} =
-      if abs(ship["dy"]) > 0.3 || abs(ship["dx"]) > 0.3 do
+      if abs(ship["dy"]) > 0.3 || abs(ship["dx"]) > 0.3 || Game.uneven_terrain(level, ship["x"]) ||
+           abs(90 - ship["angle"]) > 5 do
         {"crashed", Game.add_explosion(particles, ship)}
       else
         {"landed", particles}
       end
 
+    score =
+      if new_status == "crashed" do
+        0.0
+      else
+        max(1500 - socket.assigns[:ticks] + 5 * ship["dy"] + 5 * socket.assigns[:fuel], 0)
+      end
+
+    course = Courses.get_course!(socket.assigns[:course_id])
+    user = Users.get_user!(socket.assigns[:user_id])
+
+    Games.insert_score(%Game{
+      :course_id => course.id,
+      :user_id => user.id,
+      :score => score
+    })
+
     socket =
       socket
       |> assign(:status, new_status)
       |> assign(:particles, new_particles)
+      |> assign(:score, score)
 
     reply(socket)
   end
@@ -128,6 +146,8 @@ defmodule LanderWeb.UserChannel do
           |> Game.generate_particles(keymap, ship, fuel)
           |> Game.move_particles()
 
+        new_ticks = socket.assigns[:ticks] + 1
+
         new_fuel =
           if keymap["w"] do
             max(fuel - 1, 0)
@@ -141,6 +161,7 @@ defmodule LanderWeb.UserChannel do
           |> assign(:particles, new_particles)
           |> assign(:fuel, new_fuel)
           |> assign(:level, level)
+          |> assign(:ticks, new_ticks)
 
         reply(socket)
 
@@ -180,7 +201,6 @@ defmodule LanderWeb.UserChannel do
           |> Map.put(:level, level)
 
         BackupAgent.put(socket.assigns[:name], game)
-        IO.inspect(game)
         reply_spectator(socket)
 
       _ ->
@@ -192,7 +212,7 @@ defmodule LanderWeb.UserChannel do
     %{
       "x" => 250,
       "y" => 450,
-      "dx" => 0,
+      "dx" => 1.2,
       "dy" => 0,
       "angle" => 90
     }
@@ -208,6 +228,7 @@ defmodule LanderWeb.UserChannel do
       {%User{:email => ^socket_name}, _} ->
         course =
           Courses.get_path_from_id(course_id)
+          |> Game.all_positive
           |> Game.extend_over(1000)
           |> Game.normalize_between(25, 200)
 
@@ -221,6 +242,9 @@ defmodule LanderWeb.UserChannel do
           |> assign(:score, -1)
           |> assign(:session, session)
           |> assign(:role, "player")
+          |> assign(:ticks, 0)
+          |> assign(:course_id, course_id)
+          |> assign(:user_id, user_id)
 
         BackupAgent.put(socket.assigns[:name], socket.assigns)
         reply(socket)

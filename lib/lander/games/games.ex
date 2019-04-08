@@ -83,6 +83,10 @@ defmodule Lander.Games.Games do
     |> Repo.insert()
   end
 
+  def insert_score(game) do
+    Repo.insert(game)
+  end
+
   @doc """
   Updates a game.
 
