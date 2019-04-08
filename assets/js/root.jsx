@@ -58,7 +58,7 @@ class Root extends React.Component {
     $.ajax("/api/v1/games", {
       method: "get",
       contentType: "application/json; charset=UTF-8",
-      data: {id: this.state.session.user_id},
+      data: { id: this.state.session.user_id },
       success: (resp) => {
         let state1 = _.assign({}, this.state, { scores: resp.data });
         this.setState(state1);
@@ -147,7 +147,10 @@ class Root extends React.Component {
             <NewCourse root={this} secret_api_maps={this.state.maps_api_key} />
           } />
           <Route path="/play/:id" exact={true} render={(props) =>
-            <Lander {...props} socket={socket} email={(this.state.session == null) ? null : this.state.session.email} />
+            <Lander {...props} socket={socket} session={(this.state.session == null) ? null : this.state.session} />
+          } />
+          <Route path="/spectate/:email" exact={true} render={(props) =>
+            <Lander {...props} socket={socket} session={(this.state.session == null) ? null : this.state.session} />
           } />
           <Route path="/myscores" exact={true} render={(props) =>
             <Scores session={this.state.session} root={this} />
@@ -280,17 +283,17 @@ function User(props) {
     return <div className="card user-card">
       <div className="card-body">
         <h5 className="card-title">{user.email}</h5>
-          {hiScore}
+        {hiScore}
       </div>
     </div>;
   } else {
     return <div className="card user-card">
       <div className="card-body">
         <h5 className="card-title">{user.email}</h5>
-          {hiScore}
+        {hiScore}
       </div>
       <div className="card-footer">
-        <Link to={`/play/${user.email}`} id="playcourse" className="btn btn-success btn-block btn-sm">Spectate</Link>
+        <Link to={`/spectate/${user.email}`} id="playcourse" className="btn btn-success btn-block btn-sm">Spectate</Link>
       </div>
     </div>;
   }
@@ -302,19 +305,19 @@ function Courses(props) {
   let courses = _.map(props.courses, (c) => <Course key={c.id} course={c} session={props.session} root={props.root} />);
   if (props.session == null) {
     return <div>
-    <div className="card-columns">
-      {courses}
-    </div>
-  </div>;
+      <div className="card-columns">
+        {courses}
+      </div>
+    </div>;
   } else {
     return <div>
-    <div className="card-columns">
-      {courses}
-    </div>
-    <div className="row">
-      <Link to={"/courses/create"} id="newcourse" className="btn btn-info btn-block">New Course</Link>
-    </div>
-  </div>;
+      <div className="card-columns">
+        {courses}
+      </div>
+      <div className="row">
+        <Link to={"/courses/create"} id="newcourse" className="btn btn-info btn-block">New Course</Link>
+      </div>
+    </div>;
   }
 }
 
@@ -341,7 +344,7 @@ function Course(props) {
       </div>
     </div>;
   }
-  
+
 }
 
 function NewCourse(props) {
@@ -353,7 +356,7 @@ function NewCourse(props) {
 ///////////////////////////////////// SCORES /////////////////////////////////////
 
 function Scores(props) {
-  let {root, session} = props;
+  let { root, session } = props;
   let scores_values = root.state.scores;
   let scores = _.map(scores_values, (s) => <Score key={s.id} score={s.score} course={s.course_id} coursename={s.course_name} user={s.user_id} root={root} />)
   return <div>

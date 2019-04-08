@@ -16,14 +16,18 @@ const gameName = "kim@dot.com";
 
 class Lander extends React.Component {
     constructor(props) {
-        console.log(props);
-        let gameName = props.email;
         super(props)
-        console.log(props)
-        this.courseID = props.match.params.id
+        this.courseID = 1
+        if (props.match.path == "/play/:id") {
+            this.courseID = props.match.params.id;
+        }
         this.session = props.session
-        let socket = props.socket;
-        this.channel = socket.channel("user:" + gameName, {});
+        let gameName = props.session.email;
+        if (props.match.path == "/spectate/:email") {
+            gameName = props.match.params.email;
+        }
+        this.socket = props.socket;
+        this.channel = this.socket.channel("user:" + gameName, {});
         this.keyMap = {
             w: false,
             a: false,
@@ -41,7 +45,8 @@ class Lander extends React.Component {
             },
             particles: [],
             status: "initializing",
-            fuel: 0
+            fuel: 0,
+            score: 0
         }
         this.channel
             .join()
@@ -80,7 +85,6 @@ class Lander extends React.Component {
             .receive("ok", (view) => {
                 this.setState({ level: view.level })
                 setTimeout(this.tick, tickRate)
-                console.log(view)
             })
             .receive("error", (view) =>
                 console.log("no op"))
@@ -97,10 +101,11 @@ class Lander extends React.Component {
                     ship: view.ship,
                     particles: view.particles,
                     fuel: view.fuel,
-                    level: view.level
+                    level: view.level,
+                    score: view.score
                 })
             })
-        if (this.state.status == "playing" || this.state.particles != []) {
+        if (["initializing", "playing"].includes(this.state.status) || this.state.particles.length != 0) {
             setTimeout(this.tick, tickRate)
         }
     }
@@ -172,8 +177,8 @@ class Lander extends React.Component {
         if (this.state.status == "playing") {
             return null;
         }
-        else if (this.state.status == "Landed") {
-            text = this.state.score;
+        else if (this.state.status == "landed") {
+            text = `Nice! Your Score: ${this.state.score}`;
         }
         else if (this.state.status == "crashed") {
             text = "Score: 0 (You Crashed!)"
