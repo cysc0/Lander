@@ -23,14 +23,24 @@ defmodule LanderWeb.UserChannel do
 
   def reply(socket) do
     view =
-      %{
-        :ship => ship,
-        :particles => particles,
-        :status => status,
-        :fuel => fuel,
-        :score => score,
-        :level => level
-      } = socket.assigns
+      if socket.assigns[:send_level] do
+        %{
+          :ship => ship,
+          :particles => particles,
+          :status => status,
+          :fuel => fuel,
+          :score => score,
+          :level => level
+        } = socket.assigns
+      else
+        %{
+          :ship => ship,
+          :particles => particles,
+          :status => status,
+          :fuel => fuel,
+          :score => score
+        } = socket.assigns
+      end
 
     BackupAgent.put(socket.assigns[:name], socket.assigns)
     {:reply, {:ok, view}, socket}
@@ -155,6 +165,8 @@ defmodule LanderWeb.UserChannel do
             fuel
           end
 
+        send_level = socket.assigns[:level] != level
+
         socket =
           socket
           |> assign(:ship, new_ship)
@@ -162,6 +174,7 @@ defmodule LanderWeb.UserChannel do
           |> assign(:fuel, new_fuel)
           |> assign(:level, level)
           |> assign(:ticks, new_ticks)
+          |> assign(:send_level, send_level)
 
         reply(socket)
 
@@ -228,7 +241,7 @@ defmodule LanderWeb.UserChannel do
       {%User{:email => ^socket_name}, _} ->
         course =
           Courses.get_path_from_id(course_id)
-          |> Game.all_positive
+          |> Game.all_positive()
           |> Game.extend_over(1000)
           |> Game.normalize_between(25, 200)
 
@@ -245,6 +258,7 @@ defmodule LanderWeb.UserChannel do
           |> assign(:ticks, 0)
           |> assign(:course_id, course_id)
           |> assign(:user_id, user_id)
+          |> assign(:send_level, true)
 
         BackupAgent.put(socket.assigns[:name], socket.assigns)
         reply(socket)

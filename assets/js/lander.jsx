@@ -96,14 +96,7 @@ class Lander extends React.Component {
         this.channel
             .push("tick", { keymap: this.keyMap })
             .receive("ok", (view) => {
-                this.setState({
-                    status: view.status,
-                    ship: view.ship,
-                    particles: view.particles,
-                    fuel: view.fuel,
-                    level: view.level,
-                    score: view.score
-                })
+                this.setState(view)
             })
         if (["initializing", "playing"].includes(this.state.status) || this.state.particles.length != 0) {
             setTimeout(this.tick, tickRate)
