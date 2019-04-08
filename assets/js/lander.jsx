@@ -17,11 +17,11 @@ const gameName = "kim@dot.com";
 class Lander extends React.Component {
     constructor(props) {
         console.log(props);
-        let gameName = props.email;
         super(props)
         console.log(props)
         this.courseID = props.match.params.id
         this.session = props.session
+        let gameName = props.session.email;
         let socket = props.socket;
         this.channel = socket.channel("user:" + gameName, {});
         this.keyMap = {

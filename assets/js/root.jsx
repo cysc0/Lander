@@ -147,7 +147,7 @@ class Root extends React.Component {
             <NewCourse root={this} secret_api_maps={this.state.maps_api_key} />
           } />
           <Route path="/play/:id" exact={true} render={(props) =>
-            <Lander {...props} socket={socket} email={(this.state.session == null) ? null : this.state.session.email} />
+            <Lander {...props} socket={socket} session={(this.state.session == null) ? null : this.state.session} />
           } />
           <Route path="/myscores" exact={true} render={(props) =>
             <Scores session={this.state.session} root={this} />
