@@ -222,20 +222,6 @@ defmodule Lander.Games.Game do
         end)
       end
 
-    cond do
-      line3_collide ->
-        IO.puts("line 3 collide")
-
-      line2_collide ->
-        IO.puts("line 2 collide")
-
-      line1_collide ->
-        IO.puts("line 1 collide")
-
-      true ->
-        IO.puts("no collide")
-    end
-
     %{:left => line1_collide, :bottom => line2_collide, :right => line3_collide}
   end
 
@@ -247,8 +233,6 @@ defmodule Lander.Games.Game do
       "dx" => :math.cos(ship["angle"] * :math.pi() / 180) * Enum.random(-5..-2),
       "ttl" => Enum.random(25..50)
     }
-
-    IO.inspect(particle)
 
     [particle | old_particles]
   end
@@ -289,5 +273,16 @@ defmodule Lander.Games.Game do
         "ttl" => particle["ttl"]
       }
     end)
+  end
+
+  def uneven_terrain(level, center) do
+    {min, max} =
+      Enum.min_max(
+        Enum.map(trunc((center - ship_width / 2))..trunc((center + ship_width / 2)), fn x ->
+          Enum.at(level, x)
+        end)
+      )
+
+    abs(min - max) > 5
   end
 end
